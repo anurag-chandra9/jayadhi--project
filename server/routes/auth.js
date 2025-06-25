@@ -38,7 +38,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Logout (client should just delete token, but endpoint for completeness)
+// Logout
 router.post('/logout', (req, res) => {
   // No server-side action for JWT logout
   res.json({ message: 'Logged out successfully' });
