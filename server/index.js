@@ -15,7 +15,9 @@ app.use(logger);
 
 // Routes
 const apiRoutes = require('./routes/api');
+const authRoutes = require('./routes/auth');
 app.use('/api', apiRoutes);
+app.use('/auth', authRoutes);
 
 // Root route
 app.get('/', (req, res) => {
