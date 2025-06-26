@@ -1,3 +1,4 @@
+
  jayadhi--project
 
 This project contains both frontend (vanilla JavaScript) and backend code.
@@ -27,3 +28,5 @@ This project contains both frontend (vanilla JavaScript) and backend code.
      ```
 
 > Note: The frontend is not a React project. Do not use `npm start` or `react-scripts` in the frontend directory.
+# jayadhi--project
+
