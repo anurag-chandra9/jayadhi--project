@@ -5,7 +5,6 @@ const router = express.Router();
 const threatController = require('../controllers/threatController');
 const complianceController = require('../controllers/complianceController');
 const dashboardController = require('../controllers/dashboardController');
-const assetController = require('../controllers/assetController'); // <-- Asset controller import
 
 // Middleware
 const Auth = require('../middleware/Auth'); // Assumes Auth middleware handles JWT/Firebase auth
@@ -20,11 +19,5 @@ router.post('/compliance/update', Auth, complianceController.updateComplianceIte
 
 // ======== RISK DASHBOARD ========
 router.get('/dashboard', Auth, dashboardController.getDashboardData);
-
-// ======== ASSET MANAGEMENT ========
-router.get('/assets', Auth, assetController.getAllAssets);
-router.post('/assets', Auth, assetController.addAsset);
-router.put('/assets/:id', Auth, assetController.updateAsset);
-router.delete('/assets/:id', Auth, assetController.deleteAsset);
 
 module.exports = router;
