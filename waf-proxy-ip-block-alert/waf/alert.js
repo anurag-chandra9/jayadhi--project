@@ -1,28 +1,38 @@
-// waf/alert.js
-
 const nodemailer = require('nodemailer');
+const mongoose = require('mongoose');
+const User = require('../../server/models/userModel'); 
+const Asset = require('../../server/models/assetModel'); 
+require('dotenv').config({ path: __dirname + '/../.env' });
 
-// Replace with your credentials
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log("[MongoDB] Connected successfully."))
+    .catch((err) => console.error("[MongoDB] Connection error:", err));
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'niranjanmemane47@gmail.com',
-    pass: 'iwtk lhni uior rxkl' // Use App Password, not raw password
+    pass: 'iwtk lhni uior rxkl'
   }
 });
 
-function sendAlert(subject, message) {
-  const mailOptions = {
-    from: '"Jayadhi WAF Alert" <niranjanmemane47L@gmail.com>',
-    to: 'poojamemane17@gmail.com',
-    subject,
-    text: message
-  };
+async function sendAlert(subject, message, targetIP) {
+  try {
+    const asset = await Asset.findOne({ ip: targetIP }).populate('user');
+    const recipientEmail = asset?.user?.email || 'securityteam@jayadhi.com';
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) console.error("[Alert Error]", error);
-    else console.log("[Alert Sent]", info.response);
-  });
+    const mailOptions = {
+      from: 'Jayadhi WAF Alert <niranjanmemane47@gmail.com>',
+      to: recipientEmail,
+      subject,
+      text: message
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('[Alert Sent]', info.response);
+  } catch (error) {
+    console.error('[Alert Error]', error);
+  }
 }
 
 module.exports = sendAlert;
