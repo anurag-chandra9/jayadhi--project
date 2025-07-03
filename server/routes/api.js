@@ -19,7 +19,7 @@ router.post('/compliance/update', Auth, complianceController.updateComplianceIte
 // If you have file uploads: router.post('/compliance/upload', Auth, uploadMiddleware, complianceController.uploadDocument);
 
 // ======== RISK DASHBOARD ========
-router.get('/dashboard', Auth, dashboardController.getDashboardData);
+router.get('/dashboard', Auth, dashboardController.getDashboard);
 
 // ======== WAF MANAGEMENT (NEW) ========
 router.get('/waf/dashboard', Auth, wafController.getWAFDashboard);

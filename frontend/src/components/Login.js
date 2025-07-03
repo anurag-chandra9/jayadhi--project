@@ -33,7 +33,14 @@ const Login = () => {
       }, 1500);
     } catch (err) {
       console.error('Login or fetch failed:', err.message);
-      setMessage('Something went wrong ❌');
+      if (err.message.includes('temporarily blocked')) {
+        setMessage('🚫 Your IP has been temporarily blocked due to failed login attempts.');
+      } else if (err.message.includes('Invalid credentials')) {
+        setMessage('❌ Invalid email or password.');
+      } else {
+        setMessage(`Something went wrong ❌: ${err.message}`);
+      }
+
     }
   };
 
