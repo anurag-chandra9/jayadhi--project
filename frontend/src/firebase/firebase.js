@@ -76,7 +76,7 @@ class AuthService {
             this.currentUser = user;
             this.idToken = token;
 
-            console.log('✅ Final ID Token:', token);
+            // console.log('✅ Final ID Token:', token);
             resolve({
               success: true,
               user,
