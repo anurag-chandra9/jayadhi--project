@@ -1,0 +1,1 @@
+[2025-07-03T11:32:13.629Z] BLOCKED - SourceIP:::1 - TargetIP:localhost - Method:GET - URL:/?q=%3Cscript%3Ealert(1)%3C/script%3E - UA:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 - Reason:Malicious Pattern: /<script>/i
