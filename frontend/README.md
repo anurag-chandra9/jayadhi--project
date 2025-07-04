@@ -68,3 +68,67 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+---
+
+## ✅ Instructions for Running Multiple React Frontends on Windows
+
+To enable the custom domains `client1.local`, `client2.local`, and `admin3.local` on your machine, follow these steps:
+
+---
+
+### 🧭 Step 1: Edit the Windows `hosts` File
+
+1. Press `Win + S`, search for:
+   **Notepad**, right-click it and choose **“Run as Administrator”**
+
+2. Open the file:
+
+   ```
+   C:\Windows\System32\drivers\etc\hosts
+   ```
+
+3. At the bottom of the file, add these lines:
+
+   ```
+   127.0.0.1 client1.local
+   127.0.0.1 client2.local
+   127.0.0.1 admin3.local
+   ```
+
+4. Save the file and close Notepad.
+
+---
+
+### 🧪 Step 2: Run the Clients
+
+From your project directory, use the custom npm/yarn scripts:
+
+```bash
+# In Terminal 1
+npm run start-client1
+# or
+yarn start-client1
+```
+
+```bash
+# In Terminal 2
+npm run start-client2
+```
+
+```bash
+# In Terminal 3
+npm run start-admin3
+```
+
+---
+
+### 🌐 Now You Can Access:
+
+* `http://client1.local:3001`
+* `http://client2.local:3002`
+* `http://admin3.local:3003`
+
+From your browser — each runs in a separate port and hostname, which helps simulate multi-tenant or role-based frontends.
+
+---
