@@ -2,16 +2,11 @@ form {
   max-width: 400px;
   margin: 80px auto;
   padding: 2rem;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #ffffff, #f0f4f8);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  font-family: 'Inter', sans-serif;
-  transition: all 0.3s ease;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
 }
-form:hover {
-  transform: scale(1.01);
-}
-
 
 form h2 {
   text-align: center;
@@ -24,7 +19,7 @@ form input {
   padding: 10px;
   margin: 10px 0;
   border: 1px solid #aaa;
-  border-radius: 7px;
+  border-radius: 6px;
   font-size: 1rem;
 }
 

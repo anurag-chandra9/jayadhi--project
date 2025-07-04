@@ -30,3 +30,9 @@ This project contains both frontend (vanilla JavaScript) and backend code.
 > Note: The frontend is not a React project. Do not use `npm start` or `react-scripts` in the frontend directory.
 # jayadhi--project
 
+Instructions to Get Gmail App Password (for NodeMailer, etc.)
+Go to https://myaccount.google.com/apppasswords
+(Sign in and complete 2-Step Verification if not done already)
+
+Select App → choose “Mail”, Select Device → choose “Other” (name it e.g., "NodeMailer") → click Generate
+→ Google will show you a 16-character password like 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase/firebase'; // ✅ import from firebase.js
+// import { signInWithEmailAndPassword } from 'firebase/auth';
+import { authService } from '../firebase/firebase'; // ✅ import from firebase.js
 import './Login.css';
 
 const Login = () => {
@@ -11,23 +11,36 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      const token = await user.getIdToken();
+      // ✅ Step 1: Login via backend (gets custom token + Firebase ID token)
+      const result = await authService.loginWithBackend(email, password);
 
-      localStorage.setItem('firebaseToken', token);
-      localStorage.setItem('loggedInUserId', user.uid);
+      // ✅ Step 2: Token is now stored in authService
+      // console.log('Logged in! ID Token:', await authService.getIdToken());
 
-      setMessage('Login successful ✅');
-      setTimeout(() => {
-        window.location.href = '/home';
-      }, 1000);
-    } catch (error) {
-      if (error.code === 'auth/invalid-credential') {
-        setMessage('Incorrect Email or Password ❌');
+      // ✅ Step 3: Fetch WAF Dashboard
+      // const response = await authService.makeAuthenticatedRequest('/api/waf/dashboard');
+      // const data = await response.json();
+      // console.log('🔥 WAF Dashboard Data:', data);
+
+      // ✅ Step 4: Fetch General Dashboard
+      // const response2 = await authService.makeAuthenticatedRequest('/api/dashboard');
+      // const data2 = await response2.json();
+      // console.log('📊 Cybersecurity Dashboard Data:', data2);
+
+      setMessage('Logged in & fetched secured data successfully ✅');
+      // setTimeout(() => {
+      //   window.location.href = '/risk-dashboard';
+      // }, 1500);
+    } catch (err) {
+      console.error('Login or fetch failed:', err.message);
+      if (err.message.includes('temporarily blocked')) {
+        setMessage('🚫 Your IP has been temporarily blocked due to failed login attempts.');
+      } else if (err.message.includes('Invalid credentials')) {
+        setMessage('❌ Invalid email or password.');
       } else {
-        setMessage('Login failed ❌');
+        setMessage(`Something went wrong ❌: ${err.message}`);
       }
+
     }
   };
 

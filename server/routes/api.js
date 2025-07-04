@@ -5,7 +5,8 @@ const router = express.Router();
 const threatController = require('../controllers/threatController');
 const complianceController = require('../controllers/complianceController');
 const dashboardController = require('../controllers/dashboardController');
-const assetController = require('../controllers/assetController'); // <-- Asset controller import
+const wafController = require('../controllers/wafController'); // NEW
+const assetController = require('../controllers/assetController');
 
 // Middleware
 const Auth = require('../middleware/Auth'); // Assumes Auth middleware handles JWT/Firebase auth
@@ -19,7 +20,13 @@ router.post('/compliance/update', Auth, complianceController.updateComplianceIte
 // If you have file uploads: router.post('/compliance/upload', Auth, uploadMiddleware, complianceController.uploadDocument);
 
 // ======== RISK DASHBOARD ========
-router.get('/dashboard', Auth, dashboardController.getDashboardData);
+router.get('/dashboard', Auth, dashboardController.getDashboard);
+
+// ======== WAF MANAGEMENT (NEW) ========
+router.get('/waf/dashboard', Auth, wafController.getWAFDashboard);
+router.post('/waf/block-ip', Auth, wafController.blockIP);
+router.post('/waf/unblock-ip', Auth, wafController.unblockIP);
+router.get('/waf/security-events', Auth, wafController.getSecurityEvents);
 
 // ======== ASSET MANAGEMENT ========
 router.get('/assets', Auth, assetController.getAllAssets);
