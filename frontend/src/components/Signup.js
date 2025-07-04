@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { setDoc, doc } from 'firebase/firestore';
-import { auth, db } from '../firebase/firebase';
+// import { createUserWithEmailAndPassword } from 'firebase/auth';
+// import { setDoc, doc } from 'firebase/firestore';
+// import { auth, db } from '../firebase/firebase';
 import './Signup.css'; // ✅ Importing the CSS
 
 const Signup = () => {
@@ -12,33 +12,38 @@ const Signup = () => {
   const [message, setMessage] = useState('');
 
   const handleSignup = async (e) => {
-    e.preventDefault();
-    setMessage('');
+  e.preventDefault();
+  setMessage('');
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Save extra user data to Firestore
-      await setDoc(doc(db, 'users', user.uid), {
+  try {
+    const response = await fetch('http://localhost:3000/auth/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        username: `${firstName}${lastName}`.toLowerCase(),
         email,
-        firstName,
-        lastName
-      });
+        password
+      })
+    });
 
-      setMessage('Account created successfully ✅');
-      setTimeout(() => {
-        window.location.href = '/login'; // Or redirect with React Router
-      }, 1500);
-    } catch (error) {
-      if (error.code === 'auth/email-already-in-use') {
-        setMessage('Email already in use ❌');
-      } else {
-        setMessage('Signup failed ❌');
-        console.error(error);
-      }
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Signup failed');
     }
-  };
+
+    setMessage('Account created successfully ✅');
+
+    setTimeout(() => {
+      window.location.href = '/login';
+    }, 1500);
+  } catch (error) {
+    console.error(error);
+    setMessage(error.message || 'Signup failed ❌');
+  }
+};
 
   return (
     <div className="signup-container">
