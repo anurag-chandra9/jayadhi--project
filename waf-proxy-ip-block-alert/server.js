@@ -42,6 +42,13 @@ const targets = {
     '127.0.0.1': 'http://localhost:5001'
 };
 
+// === LOGS VIEW ===
+app.get('/logs', (req, res) => {
+    const logs = fs.readFileSync(path.join(__dirname, './logs/attacks.log'), 'utf8');
+    res.type('text').send(logs);
+});
+
+
 app.use((req, res, next) => {
     const host = req.headers.host.split(':')[0];
     const target = targets[host];
@@ -63,11 +70,6 @@ app.use((req, res, next) => {
     })(req, res, next);
 });
 
-// === LOGS VIEW ===
-app.get('/logs', (req, res) => {
-    const logs = fs.readFileSync(path.join(__dirname, './logs/attacks.log'), 'utf8');
-    res.type('text').send(logs);
-});
 
 // === START SERVER ===
 const PORT = process.env.PORT || 80;
