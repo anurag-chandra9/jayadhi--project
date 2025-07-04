@@ -1,30 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const exampleController = require('../controllers/exampleController');
 
-// Controllers
-const threatController = require('../controllers/threatController');
-const complianceController = require('../controllers/complianceController');
-const dashboardController = require('../controllers/dashboardController');
-const assetController = require('../controllers/assetController'); // <-- Asset controller import
-
-// Middleware
-const Auth = require('../middleware/Auth'); // Assumes Auth middleware handles JWT/Firebase auth
-
-// ======== THREAT INGESTION ========
-router.post('/threats/report', Auth, threatController.reportThreat);
-
-// ======== COMPLIANCE TRACKING ========
-router.get('/compliance', Auth, complianceController.getComplianceItems);
-router.post('/compliance/update', Auth, complianceController.updateComplianceItem);
-// If you have file uploads: router.post('/compliance/upload', Auth, uploadMiddleware, complianceController.uploadDocument);
-
-// ======== RISK DASHBOARD ========
-router.get('/dashboard', Auth, dashboardController.getDashboardData);
-
-// ======== ASSET MANAGEMENT ========
-router.get('/assets', Auth, assetController.getAllAssets);
-router.post('/assets', Auth, assetController.addAsset);
-router.put('/assets/:id', Auth, assetController.updateAsset);
-router.delete('/assets/:id', Auth, assetController.deleteAsset);
+router.get('/', exampleController.getExample);
 
 module.exports = router;
