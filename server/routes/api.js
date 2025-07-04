@@ -6,6 +6,7 @@ const threatController = require('../controllers/threatController');
 const complianceController = require('../controllers/complianceController');
 const dashboardController = require('../controllers/dashboardController');
 const wafController = require('../controllers/wafController'); // NEW
+const assetController = require('../controllers/assetController');
 
 // Middleware
 const Auth = require('../middleware/Auth'); // Assumes Auth middleware handles JWT/Firebase auth
@@ -26,5 +27,11 @@ router.get('/waf/dashboard', Auth, wafController.getWAFDashboard);
 router.post('/waf/block-ip', Auth, wafController.blockIP);
 router.post('/waf/unblock-ip', Auth, wafController.unblockIP);
 router.get('/waf/security-events', Auth, wafController.getSecurityEvents);
+
+// ======== ASSET MANAGEMENT ========
+router.get('/assets', Auth, assetController.getAllAssets);
+router.post('/assets', Auth, assetController.addAsset);
+router.put('/assets/:id', Auth, assetController.updateAsset);
+router.delete('/assets/:id', Auth, assetController.deleteAsset);
 
 module.exports = router;

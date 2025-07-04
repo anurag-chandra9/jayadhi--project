@@ -28,9 +28,9 @@ const Login = () => {
       // console.log('📊 Cybersecurity Dashboard Data:', data2);
 
       setMessage('Logged in & fetched secured data successfully ✅');
-      setTimeout(() => {
-        window.location.href = '/risk-dashboard';
-      }, 1500);
+      // setTimeout(() => {
+      //   window.location.href = '/risk-dashboard';
+      // }, 1500);
     } catch (err) {
       console.error('Login or fetch failed:', err.message);
       if (err.message.includes('temporarily blocked')) {

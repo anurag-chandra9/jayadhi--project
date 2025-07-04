@@ -1,60 +1,87 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { authService } from '../firebase/firebase'; // Make sure this path is correct
 
 function AssetManagement() {
   const [assets, setAssets] = useState([]);
-  const [form, setForm] = useState({ name: "", type: "", value: "" });
+  const [form, setForm] = useState({ name: "", type: "", value: 0 }); // ✅ use 0 instead of ""
+
   const [editId, setEditId] = useState(null);
 
-  // Fetch all assets on component mount
   useEffect(() => {
     fetchAssets();
   }, []);
 
   const fetchAssets = async () => {
     try {
-      const res = await axios.get("/api/assets");
-      setAssets(res.data);
+      const res = await authService.makeAuthenticatedRequest("/api/assets");
+      const data = await res.json();
+      setAssets(data);
     } catch (err) {
       alert("Error fetching assets");
     }
   };
 
-  // Handle form input change
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: name === "value" ? Number(value) : value, // ✅ convert value to number
+    }));
   };
 
-  // Add or Edit asset
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const currentUser = authService.currentUser;
+    if (!currentUser) {
+      alert("User not authenticated");
+      return;
+    }
+
+    const cleanedForm = {
+      ...form,
+      value: parseFloat(form.value), // ✅ ensure numeric
+      owner: currentUser.uid,
+    };
+
     try {
       if (editId) {
-        // Edit asset
-        await axios.put(`/api/assets/${editId}`, form);
+        await authService.makeAuthenticatedRequest(`/api/assets/${editId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(cleanedForm),
+        });
         setEditId(null);
       } else {
-        // Add asset
-        await axios.post("/api/assets", form);
+        await authService.makeAuthenticatedRequest("/api/assets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(cleanedForm),
+        });
       }
-      setForm({ name: "", type: "", value: "" });
+      setForm({ name: "", type: "", value: 0 }); // ✅ reset with 0
       fetchAssets();
     } catch (err) {
       alert("Error saving asset");
+      console.error("POST/PUT error:", err);
     }
   };
 
-  // Edit button click
   const handleEdit = (asset) => {
-    setForm({ name: asset.name, type: asset.type, value: asset.value });
+    setForm({
+      name: asset.name || "",
+      type: asset.type || "",
+      value: asset.value ?? 0, // ✅ fallback to 0 if undefined
+    });
     setEditId(asset._id);
   };
 
-  // Delete asset
   const handleDelete = async (id) => {
     if (window.confirm("Delete this asset?")) {
       try {
-        await axios.delete(`/api/assets/${id}`);
+        await authService.makeAuthenticatedRequest(`/api/assets/${id}`, {
+          method: "DELETE",
+        });
         fetchAssets();
       } catch (err) {
         alert("Error deleting asset");
@@ -96,7 +123,7 @@ function AssetManagement() {
             type="button"
             onClick={() => {
               setEditId(null);
-              setForm({ name: "", type: "", value: "" });
+              setForm({ name: "", type: "", value: 0 }); // ✅ reset to 0
             }}
           >
             Cancel
