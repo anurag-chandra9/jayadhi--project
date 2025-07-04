@@ -1,0 +1,161 @@
+/* Container */
+.asset-container {
+  max-width: 900px;
+  margin: 50px auto;
+  padding: 2.5rem;
+  background: linear-gradient(135deg, #ffffff, #f4faff);
+  border-radius: 20px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', sans-serif;
+  animation: fadeIn 0.8s ease;
+}
+
+/* Heading */
+.asset-container h2 {
+  text-align: center;
+  color: #1976d2;
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+/* Form */
+.asset-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.asset-form input {
+  flex: 1 1 28%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 15px;
+  background: #fdfdfd;
+  transition: all 0.3s ease;
+}
+
+.asset-form input:focus {
+  border-color: #00bcd4;
+  box-shadow: 0 0 5px rgba(0, 188, 212, 0.4);
+  outline: none;
+}
+
+/* Form Buttons */
+.form-actions {
+  flex-basis: 100%;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn {
+  padding: 10px 20px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #42a5f5, #1e88e5);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #1e88e5, #0d47a1);
+}
+
+.btn-secondary {
+  background: #cfd8dc;
+  color: #263238;
+}
+
+.btn-secondary:hover {
+  background: #b0bec5;
+}
+
+/* Table */
+.asset-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.asset-table th,
+.asset-table td {
+  padding: 14px 16px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+  font-size: 15px;
+}
+
+.asset-table th {
+  background: #e3f2fd;
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.asset-table tr:nth-child(even) {
+  background-color: #f9fcff;
+}
+
+.asset-table tr:hover {
+  background-color: #e1f5fe;
+}
+
+/* Actions */
+.btn-action {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  margin: 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-action.edit {
+  background: #26a69a;
+  color: white;
+}
+
+.btn-action.edit:hover {
+  background: #00897b;
+}
+
+.btn-action.delete {
+  background: #ef5350;
+  color: white;
+}
+
+.btn-action.delete:hover {
+  background: #c62828;
+}
+
+/* No data */
+.no-data {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+  font-style: italic;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
