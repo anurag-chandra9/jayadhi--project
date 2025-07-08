@@ -29,7 +29,8 @@
     "firebase-admin": "^13.4.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.1",
-    "nodemailer": "^7.0.4"
+    "nodemailer": "^7.0.4",
+    "pdfkit": "^0.17.1"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

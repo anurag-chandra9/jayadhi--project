@@ -15,7 +15,7 @@ const Login = () => {
       const result = await authService.loginWithBackend(email, password);
 
       // ✅ Step 2: Token is now stored in authService
-      // console.log('Logged in! ID Token:', await authService.getIdToken());
+      console.log('Logged in! ID Token:', await authService.getIdToken());
 
       // ✅ Step 3: Fetch WAF Dashboard
       // const response = await authService.makeAuthenticatedRequest('/api/waf/dashboard');
@@ -27,7 +27,7 @@ const Login = () => {
       // const data2 = await response2.json();
       // console.log('📊 Cybersecurity Dashboard Data:', data2);
 
-      setMessage('Logged in & fetched secured data successfully ✅');
+      // setMessage('Logged in & fetched secured data successfully ✅');
       // setTimeout(() => {
       //   window.location.href = '/risk-dashboard';
       // }, 1500);

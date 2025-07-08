@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import './RiskDashboard.css';
 import { authService } from '../firebase/firebase';
+import { useNavigate } from 'react-router-dom';
 
 const RiskDashboard = () => {
+  const navigate = useNavigate();
   const [mainData, setMainData] = useState(null);
   const [wafData, setWafData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -141,6 +143,17 @@ const RiskDashboard = () => {
           <p>No currently blocked IPs</p>
         )}
       </div>
+
+      <div className="report-incident-section">
+        <h3>📝 Incident Reporting</h3>
+        <p style={{ marginBottom: '1rem', color: '#555' }}>
+          Report a new cybersecurity incident for documentation and insurance processing.
+        </p>
+        <button onClick={() => navigate('/report-incident')} className="report-incident-button">
+          ➕ Create New Incident Report
+        </button>
+      </div>
+
 
       <div className="recent-events">
         <h3>🛡️ Recent Security Events</h3>
