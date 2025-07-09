@@ -1,0 +1,400 @@
+/* Enhanced Report Incident Styles - Complete CSS with Wider Fields */
+.report-incident-page {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.report-incident-page h2 {
+  color: #007bff;
+  margin-bottom: 0.5rem;
+  font-size: 2rem;
+  text-align: center;
+}
+
+.form-subtitle {
+  text-align: center;
+  color: #6c757d;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+/* Form Sections */
+.form-section {
+  background: white;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-left: 5px solid #007bff;
+}
+
+.report-incident-form form {
+  width: 100%;
+  max-width: 1000px;
+  display: block;
+}
+
+
+.section-title {
+  color: #007bff;
+  margin: 0 0 1rem 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 0.5rem;
+}
+
+/* Enhanced Section Fields with Wider Layout */
+.section-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); /* Increased from 300px to 450px */
+  gap: 1.5rem; /* Increased gap for better spacing */
+}
+
+/* Form Groups */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+/* Enhanced Form Input Styling with Wider Fields */
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%; /* Ensure full width within the container */
+  min-width: 400px; /* Set minimum width for better appearance */
+  max-width: 100%; /* Prevent overflow */
+  padding: 0.75rem 1rem; /* Increased horizontal padding */
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  font-family: inherit;
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.form-group input:required,
+.form-group select:required {
+  border-left: 4px solid #dc3545;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 120px; /* Increased height */
+  min-width: 100%; /* Full width */
+}
+
+/* Special Field Width Classes */
+.form-group.full-width {
+  grid-column: 1 / -1; /* Span across all columns */
+}
+
+.form-group.full-width input,
+.form-group.full-width textarea,
+.form-group.full-width select {
+  min-width: 100%;
+  width: 100%;
+}
+
+.form-group.wide-field {
+  grid-column: span 2; /* Span across 2 columns if available */
+}
+
+.form-group.wide-field input,
+.form-group.wide-field select {
+  min-width: 500px; /* Extra wide for important fields */
+}
+
+.form-group.extra-wide-field input,
+.form-group.extra-wide-field select,
+.form-group.extra-wide-field textarea {
+  min-width: 600px; /* Extra wide fields */
+}
+
+/* Checkbox Group */
+.checkbox-group {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: auto;
+  min-width: auto;
+  margin-right: 0.5rem;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* Form Actions */
+.form-actions {
+  text-align: center;
+  margin-top: 2rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.submit-button {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 250px;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
+.submit-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0056b3, #004085);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Status Messages */
+.status-message {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  animation: slideIn 0.3s ease;
+}
+
+.status-message.success {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  border-left: 5px solid #28a745;
+}
+
+.status-message.error {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  border-left: 5px solid #dc3545;
+}
+
+.status-message p {
+  margin: 0 0 1rem 0;
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.success-details {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(40, 167, 69, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.success-details p {
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+}
+
+.success-details strong {
+  color: #155724;
+}
+
+.download-link {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.pdf-link {
+  display: inline-block;
+  background: #28a745;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.pdf-link:hover {
+  background: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+  text-decoration: none;
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .section-fields {
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    min-width: 350px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .section-fields {
+    grid-template-columns: 1fr; /* Single column on smaller screens */
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    min-width: 100%; /* Full width on smaller screens */
+  }
+  
+  .form-group.wide-field,
+  .form-group.extra-wide-field {
+    grid-column: 1;
+  }
+  
+  .form-group.wide-field input,
+  .form-group.wide-field select,
+  .form-group.extra-wide-field input,
+  .form-group.extra-wide-field select,
+  .form-group.extra-wide-field textarea {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .report-incident-page {
+    padding: 1rem;
+  }
+  
+  .section-fields {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .form-section {
+    padding: 1rem;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    min-width: 100%;
+    padding: 0.875rem 1rem;
+  }
+  
+  .submit-button {
+    min-width: 200px;
+    padding: 0.875rem 1.5rem;
+  }
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading State */
+.submit-button:disabled {
+  position: relative;
+}
+
+.submit-button:disabled::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid transparent;
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Field Validation Visual Feedback */
+.form-group input:invalid {
+  border-color: #dc3545;
+}
+
+.form-group input:valid {
+  border-color: #28a745;
+}
+
+/* Placeholder Styling */
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #6c757d;
+  opacity: 0.7;
+}
+
+/* Focus States */
+.form-group input:focus::placeholder,
+.form-group textarea:focus::placeholder {
+  opacity: 0.4;
+}
+
+/* Additional Field Size Classes */
+.form-group.small-field input,
+.form-group.small-field select {
+  min-width: 250px;
+}
+
+.form-group.medium-field input,
+.form-group.medium-field select {
+  min-width: 350px;
+}
+
+.form-group.large-field input,
+.form-group.large-field select {
+  min-width: 500px;
+}

@@ -5,6 +5,7 @@ import Login from './components/Login';
 import Signup from './components/Signup';
 import AssetManagement from './components/AssetManagement';
 import RiskDashboard from './components/RiskDashboard';
+import ReportIncident from './components/ReportIncident';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="home" element={<h2 style={{ padding: "2rem" }}>🏠 Welcome Home!</h2>} />
           <Route path="assets" element={<AssetManagement />} />
           <Route path="risk-dashboard" element={<RiskDashboard />} />
+          <Route path="report-incident" element={<ReportIncident />} />
         </Route>
       </Routes>
     </Router>
