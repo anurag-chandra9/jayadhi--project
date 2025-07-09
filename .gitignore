@@ -39,3 +39,14 @@ coverage/
 .DS_Store
 Thumbs.db
 *.swp
+
+# Python virtual environments
+venv/
+rasa_env/
+
+# TensorFlow, JAX binaries, etc.
+*.pyd
+*.dll
+*.so
+*.a
+*.pb
