@@ -1,0 +1,72 @@
+version: "3.1"
+
+stories:
+
+- story: greeting and goodbye
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: goodbye
+    - action: utter_goodbye
+
+- story: report a cyber incident
+  steps:
+    - intent: report_incident
+    - action: utter_ask_report_details
+    - intent: report_incident
+    - action: utter_ack_report
+
+- story: request investigation
+  steps:
+    - intent: ask_investigation
+    - action: utter_investigation_info
+
+- story: ask cyber knowledge
+  steps:
+    - intent: ask_cyber_knowledge
+    - action: utter_cyber_knowledge
+
+- story: ask security tips
+  steps:
+    - intent: ask_security_tips
+    - action: utter_security_tips
+
+- story: follow-up on case
+  steps:
+    - intent: ask_followup
+    - action: utter_followup_info
+
+- story: certin guidelines
+  steps:
+    - intent: ask_certin_guidelines
+    - action: utter_certin_guidelines
+
+- story: post incident response
+  steps:
+    - intent: ask_post_incident_response
+    - action: utter_post_incident_response
+
+- story: cyber laws in India
+  steps:
+    - intent: ask_incident_law
+    - action: utter_incident_law
+
+- story: reporting procedure
+  steps:
+    - intent: ask_report_procedure
+    - action: utter_report_procedure
+
+- story: data privacy law
+  steps:
+    - intent: ask_data_privacy
+    - action: utter_data_privacy
+
+- story: phishing penalties
+  steps:
+    - intent: ask_phishing_penalty
+    - action: utter_phishing_penalty
+
+- story: emergency contact
+  steps:
+    - intent: ask_emergency_contact
+    - action: utter_emergency_contact

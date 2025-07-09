@@ -1,0 +1,119 @@
+version: "3.1"
+
+intents:
+  - greet
+  - goodbye
+  - report_incident
+  - ask_investigation
+  - ask_cyber_knowledge
+  - ask_security_tips
+  - ask_followup
+  - ask_certin_guidelines
+  - ask_post_incident_response
+  - ask_incident_law
+  - ask_report_procedure
+  - ask_data_privacy
+  - ask_phishing_penalty
+  - ask_emergency_contact
+
+responses:
+  utter_greet:
+    - text: "Hey! How can I assist you with cybersecurity today?"
+
+  utter_goodbye:
+    - text: "Goodbye! Stay safe online."
+
+  utter_ask_report_details:
+    - text: "Please provide more details about the cyber incident."
+
+  utter_ack_report:
+    - text: "Thank you. Your report has been recorded."
+
+  utter_investigation_info:
+    - text: "I'll note your request for investigation. Please describe the incident."
+
+  utter_cyber_knowledge:
+    - text: |
+        ✅ **Phishing** is a cyberattack that tricks you into revealing sensitive info.  
+        ✅ **Ransomware** locks your files for ransom.  
+        ✅ **CERT-In** is India's official cyber emergency response team.
+
+  utter_security_tips:
+    - text: |
+        🔒 Use strong, unique passwords  
+        🔐 Enable two-factor authentication  
+        📶 Avoid public Wi-Fi for banking  
+        💾 Back up your data regularly  
+        🛡️ Keep antivirus and OS updated
+
+  utter_followup_info:
+    - text: "We are reviewing your report. For official updates, contact CERT-In or your local cyber cell."
+
+  utter_certin_guidelines:
+    - text: |
+        CERT-In mandates:
+        🔹 Report cyber incidents within 6 hours  
+        🔹 Store logs for at least 180 days  
+        🔹 VPN providers must log users for 5 years  
+        More info: https://cert-in.org.in
+
+  utter_post_incident_response:
+    - text: |
+        🔧 Steps after a cyberattack:  
+        1. Disconnect device from internet  
+        2. Change all passwords  
+        3. Scan with updated antivirus  
+        4. Report to [cybercrime.gov.in](https://cybercrime.gov.in)  
+        5. Contact CERT-In if needed
+
+  utter_incident_law:
+    - text: |
+        🇮🇳 Indian IT Act 2000 governs cybercrime.  
+        🔸 Section 66 - Hacking  
+        🔸 Section 66C - Identity Theft  
+        🔸 Section 66D - Phishing/Fraud  
+        Violators can face jail and fines.
+
+  utter_report_procedure:
+    - text: |
+        🔸 Go to https://cybercrime.gov.in  
+        🔸 Use the “Report Other Cybercrime” tab  
+        🔸 Or call Cyber Helpline: 1930  
+        🔸 You may also email CERT-In: incident@cert-in.org.in
+
+  utter_data_privacy:
+    - text: |
+        🇮🇳 India’s **DPDP Act 2023** governs data use.  
+        🔹 You have rights over your personal data  
+        🔹 Organizations must ensure security & consent  
+        🔹 Violations may lead to heavy penalties
+
+  utter_phishing_penalty:
+    - text: |
+        ⚖️ Under Section 66D of the IT Act, phishing & cheating by impersonation can lead to:  
+        🔸 Up to 3 years imprisonment  
+        🔸 Fines up to ₹1 lakh
+
+  utter_emergency_contact:
+    - text: |
+        🆘 In case of a cyber emergency:  
+        🔹 National Cyber Helpline: **1930**  
+        🔹 Report portal: https://cybercrime.gov.in  
+        🔹 Email CERT-In: incident@cert-in.org.in
+
+actions:
+  - utter_greet
+  - utter_goodbye
+  - utter_ask_report_details
+  - utter_ack_report
+  - utter_investigation_info
+  - utter_cyber_knowledge
+  - utter_security_tips
+  - utter_followup_info
+  - utter_certin_guidelines
+  - utter_post_incident_response
+  - utter_incident_law
+  - utter_report_procedure
+  - utter_data_privacy
+  - utter_phishing_penalty
+  - utter_emergency_contact
