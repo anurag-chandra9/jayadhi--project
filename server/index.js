@@ -4,6 +4,7 @@ const connectDB = require('./config/db');
 const logger = require('./middleware/logger');
 const { firewallMiddleware } = require('./middleware/firewallMiddleware');
 const cors = require('cors');
+const path = require('path');
 
 dotenv.config();
 connectDB();
@@ -35,9 +36,15 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' })); // Add request size limit
 app.use(logger);
 app.use(firewallMiddleware); // WAF should be early in the middleware chain
+
 // Routes
 const apiRoutes = require('./routes/api');
+const authRoutes = require('./routes/auth'); // Make sure this file exists
 app.use('/api', apiRoutes);
+app.use('/auth', authRoutes);
+
+// Static file serving for reports
+app.use('/reports', express.static(path.join(__dirname, 'reports')));
 
 // Root route
 app.get('/', (req, res) => {

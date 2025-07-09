@@ -1,11 +1,15 @@
+# suspicious_url_attack.py
 import requests
 
-urls = [
-    "http://localhost:3000/admin",
-    "http://localhost:3000/.env",
-    "http://localhost:3000/phpMyAdmin"
-]
+url = "http://localhost:3000/phpMyAdmin"
+headers = {
+    "Origin": "http://localhost:3001",
+    "User-Agent": "SuspiciousBot/1.0"
+}
 
-for url in urls:
-    response = requests.get(url)
-    print(f"URL: {url} => {response.status_code}")
+response = requests.get(url, headers=headers)
+print("Status Code:", response.status_code)
+try:
+    print("Response:", response.json())
+except:
+    print("Non-JSON Response:", response.text)

@@ -1,8 +1,20 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import './RiskDashboard.css';
 import { authService } from '../firebase/firebase';
+import { useNavigate } from 'react-router-dom';
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.1, duration: 0.4 }
+  })
+};
 
 const RiskDashboard = () => {
+  const navigate = useNavigate();
   const [mainData, setMainData] = useState(null);
   const [wafData, setWafData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,10 +27,8 @@ const RiskDashboard = () => {
         authService.makeAuthenticatedRequest('/api/dashboard'),
         authService.makeAuthenticatedRequest('/api/waf/dashboard')
       ]);
-      const mainJson = await mainRes.json();
-      const wafJson = await wafRes.json();
-      setMainData(mainJson);
-      setWafData(wafJson);
+      setMainData(await mainRes.json());
+      setWafData(await wafRes.json());
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
     } finally {
@@ -30,19 +40,13 @@ const RiskDashboard = () => {
     const waitForTokenAndFetch = async () => {
       let retries = 0;
       while (!authService.idToken && retries < 10) {
-        await new Promise((r) => setTimeout(r, 300)); // wait 300ms
+        await new Promise((r) => setTimeout(r, 300));
         retries++;
       }
-      if (authService.idToken) {
-        fetchDashboardData();
-      } else {
-        console.error('Auth token still not available after wait.');
-        setLoading(false);
-      }
+      authService.idToken ? fetchDashboardData() : setLoading(false);
     };
     waitForTokenAndFetch();
   }, []);
-
 
   const handleIPAction = async (action) => {
     try {
@@ -56,50 +60,46 @@ const RiskDashboard = () => {
       });
 
       const data = await response.json();
-
       if (response.ok) {
         setActionMessage(`✅ ${data.message}`);
         fetchDashboardData();
       } else {
         const msg = [`❌ ${data.error || data.message}`];
-        if (data.ipVariations) {
-          msg.push(`🔍 Tried: ${data.ipVariations.join(', ')}`);
-        }
-        if (data.searchedFor) {
-          msg.push(`💡 Suggestions: ${data.searchedFor.slice(0, 5).join(', ')}...`);
-        }
+        if (data.ipVariations) msg.push(`🔍 Tried: ${data.ipVariations.join(', ')}`);
+        if (data.searchedFor) msg.push(`💡 Suggestions: ${data.searchedFor.slice(0, 5).join(', ')}...`);
         setActionMessage(msg.join('\n'));
       }
     } catch (error) {
-      console.error(`${action} IP error:`, error);
       setActionMessage(`❌ Failed to ${action} IP: ${error.message}`);
     }
   };
 
   if (loading) return <div className="loading">Loading Risk Dashboard...</div>;
 
+  const cardData = [
+    { title: 'Total Assets', value: mainData?.totalAssets },
+    { title: 'High Severity Threats', value: mainData?.highSeverityThreats },
+    { title: 'Compliance Score', value: mainData?.complianceScore },
+    { title: 'Overall Risk', value: mainData?.overallRiskLevel },
+    { title: 'Total Blocked IPs', value: wafData?.stats?.totalBlockedIPs },
+    { title: 'Critical Events (24h)', value: wafData?.stats?.criticalEvents },
+    { title: 'Events Last 24h', value: wafData?.stats?.securityEvents24h },
+  ];
+
   return (
-    <div className="dashboard">
-      <h2>📊 Risk Analysis Dashboard</h2>
+    <motion.div className="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+      <motion.h2 className="dashboard-title" initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>📊 Risk Analysis Dashboard</motion.h2>
 
       <div className="summary-cards">
-        {[
-          { title: 'Total Assets', value: mainData?.totalAssets },
-          { title: 'High Severity Threats', value: mainData?.highSeverityThreats },
-          { title: 'Compliance Score', value: mainData?.complianceScore },
-          { title: 'Overall Risk', value: mainData?.overallRiskLevel },
-          { title: 'Total Blocked IPs', value: wafData?.stats?.totalBlockedIPs },
-          { title: 'Critical Events (24h)', value: wafData?.stats?.criticalEvents },
-          { title: 'Events Last 24h', value: wafData?.stats?.securityEvents24h },
-        ].map(({ title, value }) => (
-          <div className="card" key={title}>
-            <h3>{title}</h3>
-            <p>{value}</p>
-          </div>
+        {cardData.map((item, i) => (
+          <motion.div className="card" key={item.title} custom={i} variants={cardVariants} initial="hidden" animate="visible">
+            <h3>{item.title}</h3>
+            <p>{item.value}</p>
+          </motion.div>
         ))}
       </div>
 
-      <div className="ip-controls">
+      <motion.div className="ip-controls" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
         <h3>🚦 Manual IP Control</h3>
         <input
           type="text"
@@ -112,9 +112,9 @@ const RiskDashboard = () => {
           <button onClick={() => handleIPAction('unblock')}>Unblock IP</button>
         </div>
         {actionMessage && <pre className="action-message">{actionMessage}</pre>}
-      </div>
+      </motion.div>
 
-      <div className="blocked-ips">
+      <motion.div className="blocked-ips" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
         <h3>🚫 Currently Blocked IPs</h3>
         {wafData?.blockedIPs?.length > 0 ? (
           <table>
@@ -140,9 +140,19 @@ const RiskDashboard = () => {
         ) : (
           <p>No currently blocked IPs</p>
         )}
-      </div>
+      </motion.div>
 
-      <div className="recent-events">
+      <motion.div className="report-incident-section" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+        <h3>📝 Incident Reporting</h3>
+        <p className="report-subtext">
+          Report a new cybersecurity incident for documentation and insurance processing.
+        </p>
+        <button onClick={() => navigate('/report-incident')} className="report-incident-button">
+          ➕ Create New Incident Report
+        </button>
+      </motion.div>
+
+      <motion.div className="recent-events" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
         <h3>🛡️ Recent Security Events</h3>
         <table>
           <thead>
@@ -166,8 +176,8 @@ const RiskDashboard = () => {
             ))}
           </tbody>
         </table>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
