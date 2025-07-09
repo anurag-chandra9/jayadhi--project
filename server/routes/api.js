@@ -7,6 +7,7 @@ const complianceController = require('../controllers/complianceController');
 const dashboardController = require('../controllers/dashboardController');
 const wafController = require('../controllers/wafController'); // NEW
 const assetController = require('../controllers/assetController');
+const incidentReportController = require('../controllers/incidentReportController'); // NEW
 
 // Middleware
 const Auth = require('../middleware/Auth'); // Assumes Auth middleware handles JWT/Firebase auth
@@ -33,5 +34,8 @@ router.get('/assets', Auth, assetController.getAllAssets);
 router.post('/assets', Auth, assetController.addAsset);
 router.put('/assets/:id', Auth, assetController.updateAsset);
 router.delete('/assets/:id', Auth, assetController.deleteAsset);
+
+// ======== INCIDENT REPORTING ========
+router.post('/incidents/report', Auth, incidentReportController.reportIncident);
 
 module.exports = router;

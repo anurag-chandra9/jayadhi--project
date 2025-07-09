@@ -10,6 +10,7 @@ connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const path = require('path');
 
 app.set('trust proxy', true);
 
@@ -40,6 +41,7 @@ const apiRoutes = require('./routes/api');
 const authRoutes = require('./routes/auth');
 app.use('/api', apiRoutes);
 app.use('/auth', authRoutes);
+app.use('/reports', express.static(path.join(__dirname, 'reports')));
 
 // Root route
 app.get('/', (req, res) => {
