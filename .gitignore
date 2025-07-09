@@ -8,45 +8,47 @@ build/
 .env
 .env.local
 
-# Ignore Firebase or other credentials
+# === Firebase or sensitive configs
 server/config/serviceAccountKey.json
 
 # === Python (Rasa Chatbot) ===
 venv/
+rasa_env/
 __pycache__/
 *.py[cod]
 *.db
 *.log
 *.sqlite3
 *.pkl
-.rasa/
-.rasa_env/
 
-# === Rasa Trained Files and Data ===
+# === Rasa trained models and temp data ===
 models/
+.rasa/
 *.json
 *.yml
 *.md
 
-# === Logs and coverage ===
-*.log
-logs/
-coverage/
-.nyc_output/
-
-# === IDEs and OS ===
-.vscode/
-.DS_Store
-Thumbs.db
-*.swp
-
-# Python virtual environments
-venv/
-rasa_env/
-
-# TensorFlow, JAX binaries, etc.
+# === TensorFlow, JAX & compiled binaries ===
 *.pyd
 *.dll
 *.so
 *.a
 *.pb
+*.whl
+
+# === Logs and coverage ===
+logs/
+*.log
+coverage/
+.nyc_output/
+
+# === IDEs and OS files ===
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+
+# === Python packaging metadata ===
+*.egg-info/
+*.npy
+*.zip
