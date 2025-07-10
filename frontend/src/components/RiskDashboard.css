@@ -5,6 +5,7 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f4f7fa;
   min-height: 100vh;
+  box-sizing: border-box;
 }
 
 .dashboard-title {
@@ -76,6 +77,7 @@
   border: 1px solid #d1d5db;
   border-radius: 8px;
   margin-bottom: 1rem;
+  box-sizing: border-box;
 }
 
 .ip-buttons {
@@ -148,4 +150,93 @@
 
 .report-incident-button:hover {
   background-color: #1e40af;
+}
+
+/* Responsive styles */
+
+@media (max-width: 1024px) {
+  .summary-cards {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .card {
+    flex: 1 1 45%; /* 2 cards per row */
+    min-width: 220px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard {
+    padding: 1rem;
+  }
+
+  .dashboard-title {
+    font-size: 1.5rem;
+    text-align: center;
+  }
+
+  .summary-cards {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .card {
+    flex: 1 1 100%;
+    min-width: auto;
+  }
+
+  .ip-controls input {
+    max-width: 100%;
+  }
+
+  .ip-buttons {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .ip-buttons button {
+    width: 100%;
+  }
+
+  .blocked-ips table,
+  .recent-events table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .blocked-ips th,
+  .blocked-ips td,
+  .recent-events th,
+  .recent-events td {
+    padding: 0.5rem;
+  }
+
+  .report-incident-button {
+    width: 100%;
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .dashboard-title {
+    font-size: 1.25rem;
+  }
+
+  .card h3 {
+    font-size: 0.9rem;
+  }
+
+  .card p {
+    font-size: 1.1rem;
+  }
+
+  .ip-controls h3,
+  .blocked-ips h3,
+  .report-incident-section h3,
+  .recent-events h3 {
+    font-size: 1.1rem;
+  }
 }

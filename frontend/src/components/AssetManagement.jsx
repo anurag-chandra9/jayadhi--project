@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { authService } from '../firebase/firebase'; // Make sure this path is correct
+import { authService } from '../firebase/firebase'; // Ensure this path is correct
 
 function AssetManagement() {
   const [assets, setAssets] = useState([]);
-  const [form, setForm] = useState({ name: "", type: "", value: 0 }); // ✅ use 0 instead of ""
-
+  const [form, setForm] = useState({ name: "", type: "", value: 0 });
   const [editId, setEditId] = useState(null);
 
   useEffect(() => {
@@ -15,9 +14,14 @@ function AssetManagement() {
     try {
       const res = await authService.makeAuthenticatedRequest("/api/assets");
       const data = await res.json();
-      setAssets(data);
+      // Adjust this depending on your API response structure:
+      // If the API returns { assets: [...] } use data.assets
+      // If it returns an array directly, use data
+      const assetsArray = Array.isArray(data) ? data : data.assets || [];
+      setAssets(assetsArray);
     } catch (err) {
       alert("Error fetching assets");
+      console.error(err);
     }
   };
 
@@ -25,7 +29,7 @@ function AssetManagement() {
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: name === "value" ? Number(value) : value, // ✅ convert value to number
+      [name]: name === "value" ? Number(value) : value,
     }));
   };
 
@@ -40,7 +44,7 @@ function AssetManagement() {
 
     const cleanedForm = {
       ...form,
-      value: parseFloat(form.value), // ✅ ensure numeric
+      value: parseFloat(form.value),
       owner: currentUser.uid,
     };
 
@@ -59,7 +63,7 @@ function AssetManagement() {
           body: JSON.stringify(cleanedForm),
         });
       }
-      setForm({ name: "", type: "", value: 0 }); // ✅ reset with 0
+      setForm({ name: "", type: "", value: 0 });
       fetchAssets();
     } catch (err) {
       alert("Error saving asset");
@@ -71,7 +75,7 @@ function AssetManagement() {
     setForm({
       name: asset.name || "",
       type: asset.type || "",
-      value: asset.value ?? 0, // ✅ fallback to 0 if undefined
+      value: asset.value ?? 0,
     });
     setEditId(asset._id);
   };
@@ -123,7 +127,7 @@ function AssetManagement() {
             type="button"
             onClick={() => {
               setEditId(null);
-              setForm({ name: "", type: "", value: 0 }); // ✅ reset to 0
+              setForm({ name: "", type: "", value: 0 });
             }}
           >
             Cancel
@@ -141,18 +145,19 @@ function AssetManagement() {
           </tr>
         </thead>
         <tbody>
-          {assets.map((asset) => (
-            <tr key={asset._id}>
-              <td>{asset.name}</td>
-              <td>{asset.type}</td>
-              <td>{asset.value}</td>
-              <td>
-                <button onClick={() => handleEdit(asset)}>Edit</button>
-                <button onClick={() => handleDelete(asset._id)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-          {assets.length === 0 && (
+          {Array.isArray(assets) && assets.length > 0 ? (
+            assets.map((asset) => (
+              <tr key={asset._id}>
+                <td>{asset.name}</td>
+                <td>{asset.type}</td>
+                <td>{asset.value}</td>
+                <td>
+                  <button onClick={() => handleEdit(asset)}>Edit</button>
+                  <button onClick={() => handleDelete(asset._id)}>Delete</button>
+                </td>
+              </tr>
+            ))
+          ) : (
             <tr>
               <td colSpan="4" align="center">
                 No assets found.
