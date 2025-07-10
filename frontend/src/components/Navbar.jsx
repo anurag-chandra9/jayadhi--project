@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Navbar.css';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem('token');
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
 
   return (
     <nav className="navbar">
@@ -28,11 +35,21 @@ const Navbar = () => {
       </div>
 
       <div className={`nav-links ${isOpen ? 'open' : ''}`}>
-        <Link to="/login">Login</Link>
-        <Link to="/signup">Sign Up</Link>
-        <Link to="/home">Home</Link>
-        <Link to="/assets">Assets</Link>
-        <Link to="/risk-dashboard">Risk Dashboard</Link>
+        {!isLoggedIn ? (
+          <>
+            <Link to="/login">Login</Link>
+            <Link to="/signup">Sign Up</Link>
+          </>
+        ) : (
+          <>
+            <Link to="/home">Home</Link>
+            <Link to="/assets">Assets</Link>
+            <Link to="/risk-dashboard">Risk Dashboard</Link>
+            <Link to="/report-incident">Report Incident</Link>
+            <Link to="/chatbot">Chatbot</Link>
+            <button className="logout-btn" onClick={handleLogout}>Logout</button>
+          </>
+        )}
       </div>
     </nav>
   );

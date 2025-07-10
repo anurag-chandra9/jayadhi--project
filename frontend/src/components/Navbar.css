@@ -67,7 +67,7 @@
   /* Keep nav-links horizontal on mobile with scroll */
   .nav-links {
     display: none;
-    flex-direction: column; /* horizontal links */
+    flex-direction: column; /* vertical links */
     width: 100%;
     margin-top: 0.5rem;
     overflow-x: auto; /* allow horizontal scroll */
