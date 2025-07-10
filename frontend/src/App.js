@@ -6,11 +6,16 @@ import Signup from './components/Signup';
 import AssetManagement from './components/AssetManagement';
 import RiskDashboard from './components/RiskDashboard';
 import ReportIncident from './components/ReportIncident';
+import ChatbotInterface from './components/Chat/ChatbotInterface';
 
 function App() {
+  // ✅ Simple authentication check
+  const isLoggedIn = !!localStorage.getItem('token');
+
   return (
     <Router>
       <Routes>
+        {/* Shared layout (e.g., Navbar) */}
         <Route path="/" element={<Layout />}>
           <Route path="login" element={<Login />} />
           <Route path="signup" element={<Signup />} />
@@ -18,6 +23,11 @@ function App() {
           <Route path="assets" element={<AssetManagement />} />
           <Route path="risk-dashboard" element={<RiskDashboard />} />
           <Route path="report-incident" element={<ReportIncident />} />
+
+          {/* ✅ Only accessible if user is logged in */}
+          {isLoggedIn && (
+            <Route path="chatbot" element={<ChatbotInterface />} />
+          )}
         </Route>
       </Routes>
     </Router>

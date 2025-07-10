@@ -17,3 +17,18 @@
 .nav-links a:hover {
   text-decoration: underline;
 }
+.nav-links a {
+  margin: 0 10px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+}
+
+.nav-links a:hover {
+  color: #007bff;
+}
+
+.nav-links a:last-child {
+  font-weight: bold;
+  color: #0056b3;
+}
