@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './components/Login';
 import Signup from './components/Signup';
@@ -17,6 +17,7 @@ function App() {
       <Routes>
         {/* Shared layout (e.g., Navbar) */}
         <Route path="/" element={<Layout />}>
+          <Route index element={<Navigate to="/home" replace />} />
           <Route path="login" element={<Login />} />
           <Route path="signup" element={<Signup />} />
           <Route path="home" element={<h2 style={{ padding: "2rem" }}>🏠 Welcome Home!</h2>} />
