@@ -1,20 +1,30 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Navbar.css';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const isLoggedIn = !!localStorage.getItem('token');
+  const location = useLocation();
+
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+
+  useEffect(() => {
+    // Whenever location changes, re-check login status
+    setIsLoggedIn(!!localStorage.getItem('token'));
+  }, [location]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    setIsLoggedIn(false); // 👈 ensure state is updated
     navigate('/login');
   };
 
   return (
     <nav className="navbar">
       <div className="navbar-left">
-        <h1 className="logo">CyberSentinel</h1>
+        <h1 className="logo">
+          <Link to="/home" className="logo-link">CyberSentinel</Link>
+        </h1>
       </div>
 
       <div className="nav-links">

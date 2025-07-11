@@ -1,3 +1,4 @@
+/* Navbar container */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -13,21 +14,34 @@
   box-sizing: border-box;
 }
 
+/* Logo text */
 .logo {
   font-size: 24px;
   font-weight: 800;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  color: #00ffe7;
   text-transform: uppercase;
   user-select: none;
+  margin: 0; /* remove default spacing */
 }
 
+/* Link wrapped around logo */
+.logo-link {
+  text-decoration: none;
+  color: #00ffe7;
+}
+
+.logo-link:hover {
+  color: #00ffe7; /* keep color consistent on hover */
+}
+
+/* Navigation links container */
 .nav-links {
   display: flex;
   align-items: center;
   gap: 18px;
 }
 
+/* Each navigation link */
 .nav-link {
   color: #cfe6ff;
   text-decoration: none;
@@ -58,6 +72,7 @@
   width: 100%;
 }
 
+/* Common button styling */
 .btn {
   padding: 10px 18px;
   border: none;
@@ -70,6 +85,7 @@
   transition: all 0.3s ease-in-out;
 }
 
+/* Special impact button */
 .impact-btn {
   background: linear-gradient(135deg, #00ffe7, #4dc2f9);
   color: #0a0f24;
@@ -81,6 +97,7 @@
   box-shadow: 0 0 18px rgba(0, 255, 231, 0.5);
 }
 
+/* Logout button style */
 .logout-btn {
   background: transparent;
   border: 2px solid #ff4d6d;
