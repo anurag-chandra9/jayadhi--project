@@ -2,33 +2,94 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background-color: #1976d2;
-  color: white;
+  padding: 20px 5%;
+  background: radial-gradient(circle at top, #0a0f24, #0f162c 60%, #141c3a 100%);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.05);
+  box-shadow: 0 2px 10px rgba(0, 255, 255, 0.04);
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  box-sizing: border-box;
 }
 
-.nav-links a {
-  color: white;
-  margin-left: 15px;
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #00ffe7;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.nav-link {
+  color: #cfe6ff;
   text-decoration: none;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  text-transform: uppercase;
+  position: relative;
+  transition: color 0.3s ease;
 }
 
-.nav-links a:hover {
-  text-decoration: underline;
-}
-.nav-links a {
-  margin: 0 10px;
-  text-decoration: none;
-  color: #333;
-  font-weight: 500;
-}
-
-.nav-links a:hover {
-  color: #007bff;
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background: #00ffe7;
+  transition: width 0.3s ease;
 }
 
-.nav-links a:last-child {
-  font-weight: bold;
-  color: #0056b3;
+.nav-link:hover {
+  color: #ffffff;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  transition: all 0.3s ease-in-out;
+}
+
+.impact-btn {
+  background: linear-gradient(135deg, #00ffe7, #4dc2f9);
+  color: #0a0f24;
+  box-shadow: 0 0 12px rgba(0, 255, 231, 0.3);
+}
+
+.impact-btn:hover {
+  background: linear-gradient(135deg, #4dc2f9, #00ffe7);
+  box-shadow: 0 0 18px rgba(0, 255, 231, 0.5);
+}
+
+.logout-btn {
+  background: transparent;
+  border: 2px solid #ff4d6d;
+  color: #ff4d6d;
+  font-weight: 600;
+}
+
+.logout-btn:hover {
+  background-color: #1c213a;
+  color: white;
+  box-shadow: 0 0 10px rgba(255, 77, 109, 0.5);
 }
