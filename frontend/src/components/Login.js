@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-// import { signInWithEmailAndPassword } from 'firebase/auth';
-import { authService } from '../firebase/firebase'; // ✅ import from firebase.js
+import { authService } from '../firebase/firebase';
 import './Login.css';
 
 const Login = () => {
@@ -11,26 +10,24 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      // ✅ Step 1: Login via backend (gets custom token + Firebase ID token)
-      const result = await authService.loginWithBackend(email, password);
+      // Step 1: Login via backend
+      await authService.loginWithBackend(email, password);
 
-      // ✅ Step 2: Token is now stored in authService
-      // console.log('Logged in! ID Token:', await authService.getIdToken());
+      // Step 2: Get Firebase ID token
+      const token = await authService.getIdToken();
 
-      // ✅ Step 3: Fetch WAF Dashboard
-      // const response = await authService.makeAuthenticatedRequest('/api/waf/dashboard');
-      // const data = await response.json();
-      // console.log('🔥 WAF Dashboard Data:', data);
+      if (!token) {
+        throw new Error('Failed to retrieve token');
+      }
 
-      // ✅ Step 4: Fetch General Dashboard
-      // const response2 = await authService.makeAuthenticatedRequest('/api/dashboard');
-      // const data2 = await response2.json();
-      // console.log('📊 Cybersecurity Dashboard Data:', data2);
+      // ✅ Step 3: Store token in localStorage
+      localStorage.setItem('token', token);
 
-      setMessage('Logged in & fetched secured data successfully ✅');
+      // Step 4: Redirect to dashboard
+      setMessage('Login successful ✅ Redirecting...');
       setTimeout(() => {
-        window.location.href = '/risk-dashboard';
-      }, 1500);
+        window.location.href = '/risk-dashboard'; // OR use `navigate()` if using react-router hooks
+      }, 1000);
     } catch (err) {
       console.error('Login or fetch failed:', err.message);
       if (err.message.includes('temporarily blocked')) {
@@ -40,7 +37,6 @@ const Login = () => {
       } else {
         setMessage(`Something went wrong ❌: ${err.message}`);
       }
-
     }
   };
 

@@ -1,53 +1,46 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Navbar.css';
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-  const isLoggedIn = !!localStorage.getItem('token');
+  const location = useLocation();
+
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+
+  useEffect(() => {
+    // Whenever location changes, re-check login status
+    setIsLoggedIn(!!localStorage.getItem('token'));
+  }, [location]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    setIsLoggedIn(false); // 👈 ensure state is updated
     navigate('/login');
   };
 
   return (
     <nav className="navbar">
-      <div className="navbar-top">
-        <h3 className="logo">Jayadhi App</h3>
-
-        <div
-          className="hamburger"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle menu"
-          aria-expanded={isOpen}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') setIsOpen(!isOpen);
-          }}
-        >
-          <span className="bar"></span>
-          <span className="bar"></span>
-          <span className="bar"></span>
-        </div>
+      <div className="navbar-left">
+        <h1 className="logo">
+          <Link to="/home" className="logo-link">CyberSentinel</Link>
+        </h1>
       </div>
 
-      <div className={`nav-links ${isOpen ? 'open' : ''}`}>
+      <div className="nav-links">
         {!isLoggedIn ? (
           <>
-            <Link to="/login">Login</Link>
-            <Link to="/signup">Sign Up</Link>
+            <Link to="/login" className="btn impact-btn">Login</Link>
+            <Link to="/signup" className="btn impact-btn">Signup</Link>
           </>
         ) : (
           <>
-            <Link to="/home">Home</Link>
-            <Link to="/assets">Assets</Link>
-            <Link to="/risk-dashboard">Risk Dashboard</Link>
-            <Link to="/report-incident">Report Incident</Link>
-            <Link to="/chatbot">Chatbot</Link>
-            <button className="logout-btn" onClick={handleLogout}>Logout</button>
+            <Link to="/home" className="nav-link">Home</Link>
+            <Link to="/assets" className="nav-link">Assets</Link>
+            <Link to="/risk-dashboard" className="nav-link">Risk Dashboard</Link>
+            <Link to="/report-incident" className="nav-link">Report Incident</Link>
+            <Link to="/chatbot" className="nav-link">Chatbot</Link>
+            <button className="btn logout-btn" onClick={handleLogout}>Logout</button>
           </>
         )}
       </div>

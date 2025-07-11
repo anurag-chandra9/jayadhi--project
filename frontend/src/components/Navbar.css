@@ -1,90 +1,112 @@
+/* Navbar container */
 .navbar {
-  background-color: #1976d2;
-  color: white;
-  padding: 1rem 2rem;
-  font-family: 'Segoe UI', sans-serif;
-  box-sizing: border-box;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 20px 5%;
+  background: radial-gradient(circle at top, #0a0f24, #0f162c 60%, #141c3a 100%);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.05);
+  box-shadow: 0 2px 10px rgba(0, 255, 255, 0.04);
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  box-sizing: border-box;
 }
 
-/* Top row: logo + hamburger side by side */
-.navbar-top {
+/* Logo text */
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  text-transform: uppercase;
+  user-select: none;
+  margin: 0; /* remove default spacing */
+}
+
+/* Link wrapped around logo */
+.logo-link {
+  text-decoration: none;
+  color: #00ffe7;
+}
+
+.logo-link:hover {
+  color: #00ffe7; /* keep color consistent on hover */
+}
+
+/* Navigation links container */
+.nav-links {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 18px;
+}
+
+/* Each navigation link */
+.nav-link {
+  color: #cfe6ff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  text-transform: uppercase;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background: #00ffe7;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #ffffff;
+}
+
+.nav-link:hover::after {
   width: 100%;
 }
 
-/* Logo styling */
-.logo {
-  font-size: 1.5rem;
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-/* Nav links horizontal on desktop */
-.nav-links {
-  display: flex;
-  gap: 20px;
-  margin-top: 1rem;
-  justify-content: flex-end;
-}
-
-.nav-links a {
-  color: white;
-  text-decoration: none;
-  font-weight: bold;
-  white-space: nowrap; /* prevent link text wrap */
-}
-
-.nav-links a:hover {
-  text-decoration: underline;
-}
-
-/* Hamburger hidden on desktop */
-.hamburger {
-  display: none;
-  flex-direction: column;
+/* Common button styling */
+.btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 13px;
   cursor: pointer;
-  gap: 5px;
+  text-transform: uppercase;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  transition: all 0.3s ease-in-out;
 }
 
-.bar {
-  width: 25px;
-  height: 3px;
-  background-color: white;
-  transition: 0.3s;
+/* Special impact button */
+.impact-btn {
+  background: linear-gradient(135deg, #00ffe7, #4dc2f9);
+  color: #0a0f24;
+  box-shadow: 0 0 12px rgba(0, 255, 231, 0.3);
 }
 
-/* Mobile responsive */
-@media (max-width: 768px) {
-  .hamburger {
-    display: flex;
-  }
+.impact-btn:hover {
+  background: linear-gradient(135deg, #4dc2f9, #00ffe7);
+  box-shadow: 0 0 18px rgba(0, 255, 231, 0.5);
+}
 
-  /* Keep nav-links horizontal on mobile with scroll */
-  .nav-links {
-    display: none;
-    flex-direction: column; /* vertical links */
-    width: 100%;
-    margin-top: 0.5rem;
-    overflow-x: auto; /* allow horizontal scroll */
-    gap: 15px; /* smaller gap to fit better */
-  }
+/* Logout button style */
+.logout-btn {
+  background: transparent;
+  border: 2px solid #ff4d6d;
+  color: #ff4d6d;
+  font-weight: 600;
+}
 
-  .nav-links.open {
-    display: flex;
-  }
-
-  /* Stack navbar-top and nav-links vertically */
-  .navbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .navbar-top {
-    padding-bottom: 0.5rem;
-  }
+.logout-btn:hover {
+  background-color: #1c213a;
+  color: white;
+  box-shadow: 0 0 10px rgba(255, 77, 109, 0.5);
 }

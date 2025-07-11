@@ -1,0 +1,8 @@
+/* index.css or App.css */
+body {
+  margin: 0;
+  padding: 0;
+  background: radial-gradient(circle at top, #0a0f24, #0f162c 60%, #141c3a 100%);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #ffffff;
+}
