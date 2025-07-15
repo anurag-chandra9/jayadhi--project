@@ -39,6 +39,7 @@ const Navbar = () => {
             <Link to="/assets" className="nav-link">Assets</Link>
             <Link to="/risk-dashboard" className="nav-link">Risk Dashboard</Link>
             <Link to="/report-incident" className="nav-link">Report Incident</Link>
+            <Link to="/subscription" className="nav-link">Subscription</Link>
             <Link to="/chatbot" className="nav-link">Chatbot</Link>
             <button className="btn logout-btn" onClick={handleLogout}>Logout</button>
           </>

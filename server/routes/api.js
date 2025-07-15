@@ -8,6 +8,8 @@ const dashboardController = require('../controllers/dashboardController');
 const wafController = require('../controllers/wafController'); // NEW
 const assetController = require('../controllers/assetController');
 const incidentReportController = require('../controllers/incidentReportController'); // NEW
+const subscriptionRoutes = require('./Subscription');
+router.use('/subscription', subscriptionRoutes);
 
 // Middleware
 const Auth = require('../middleware/Auth'); // Assumes Auth middleware handles JWT/Firebase auth

@@ -12,10 +12,13 @@ connectDB();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy (for IP address detection behind reverse proxies)
 app.set('trust proxy', true);
 
-// Middleware (ORDER IS IMPORTANT!)
+// ✅ Allowed origins for CORS
 const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
   'http://localhost:3001',
   'http://client1.local:3001',
   'http://client2.local:3002',
@@ -24,41 +27,51 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    console.log('Request Origin:', origin);
+    if (!origin) return callback(null, true); // allow REST clients, curl, Postman etc.
+
+    // Normalize origin (remove trailing slash if present)
+    const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+
+    if (allowedOrigins.includes(normalizedOrigin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true,
+  credentials: true
 }));
 
-app.use(express.json({ limit: '10mb' })); // Add request size limit
-app.use(logger);
-app.use(firewallMiddleware); // WAF should be early in the middleware chain
+// ✅ Parse JSON with body limit
+app.use(express.json({ limit: '10mb' }));
 
-// Routes
+// ✅ Custom middlewares
+app.use(logger);
+app.use(firewallMiddleware); // WAF should be early
+
+// ✅ Routes
 const apiRoutes = require('./routes/api');
-const authRoutes = require('./routes/auth'); // Make sure this file exists
+const authRoutes = require('./routes/auth');
+
 app.use('/api', apiRoutes);
 app.use('/auth', authRoutes);
 
-// Static file serving for reports
+// ✅ Serve static files (e.g., reports)
 app.use('/reports', express.static(path.join(__dirname, 'reports')));
 
-// Root route
+// ✅ Root route
 app.get('/', (req, res) => {
   res.send('Welcome to Cybersecurity Platform API - Protected by WAF');
 });
 
-// Error handling middleware
+// ✅ Global error handler
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  console.error('Unhandled error:', err.message);
+  res.status(500).json({ error: err.message || 'Internal server error' });
 });
 
-// Start server
+// ✅ Start the server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log('WAF (Web Application Firewall) is active and monitoring traffic');
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log('🛡️  WAF (Web Application Firewall) is active and monitoring traffic');
 });
