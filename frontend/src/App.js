@@ -9,6 +9,7 @@ import RiskDashboard from './components/RiskDashboard';
 import ReportIncident from './components/ReportIncident';
 import ChatbotInterface from './components/Chat/ChatbotInterface';
 import HomePage from './components/Home';
+import SubscriptionForm from './components/SubscriptionForm';
 
 function App() {
   const isLoggedIn = !!localStorage.getItem('token');
@@ -24,6 +25,7 @@ function App() {
           <Route path="assets" element={<AssetManagement />} />
           <Route path="risk-dashboard" element={<RiskDashboard />} />
           <Route path="report-incident" element={<ReportIncident />} />
+          <Route path="subscription" element={<SubscriptionForm />} />
           {isLoggedIn && (
             <Route path="chatbot" element={<ChatbotInterface />} />
           )}

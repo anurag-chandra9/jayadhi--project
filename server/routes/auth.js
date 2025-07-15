@@ -17,6 +17,7 @@ if (!admin.apps.length) {
 
 // Signup
 router.post('/signup', async (req, res) => {
+  console.log('Signup request body:', req.body); // Add this line
   try {
     const { username, email, password } = req.body;
     const ipAddress = AuthTracker.getClientIP(req);
