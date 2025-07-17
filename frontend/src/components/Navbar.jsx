@@ -6,17 +6,24 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Whenever location changes, re-check login status
-    setIsLoggedIn(!!localStorage.getItem('token'));
+    // Check login from authService, not localStorage
+    const token = localStorage.getItem('token'); // You may replace this if using Firebase context
+    setIsLoggedIn(!!token);
   }, [location]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    setIsLoggedIn(false); // 👈 ensure state is updated
+    setIsLoggedIn(false);
+    setMenuOpen(false);
     navigate('/login');
+  };
+
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
   };
 
   return (
@@ -27,20 +34,26 @@ const Navbar = () => {
         </h1>
       </div>
 
-      <div className="nav-links">
+      <div className="menu-toggle" onClick={toggleMenu}>
+        <span className="bar"></span>
+        <span className="bar"></span>
+        <span className="bar"></span>
+      </div>
+
+      <div className={`nav-links ${menuOpen ? 'active' : ''}`}>
         {!isLoggedIn ? (
           <>
-            <Link to="/login" className="btn impact-btn">Login</Link>
-            <Link to="/signup" className="btn impact-btn">Signup</Link>
+            <Link to="/login" className="btn impact-btn" onClick={() => setMenuOpen(false)}>Login</Link>
+            <Link to="/signup" className="btn impact-btn" onClick={() => setMenuOpen(false)}>Signup</Link>
           </>
         ) : (
           <>
-            <Link to="/home" className="nav-link">Home</Link>
-            <Link to="/assets" className="nav-link">Assets</Link>
-            <Link to="/risk-dashboard" className="nav-link">Risk Dashboard</Link>
-            <Link to="/report-incident" className="nav-link">Report Incident</Link>
-            <Link to="/subscription" className="nav-link">Subscription</Link>
-            <Link to="/chatbot" className="nav-link">Chatbot</Link>
+            <Link to="/home" className="nav-link" onClick={() => setMenuOpen(false)}>Home</Link>
+            <Link to="/assets" className="nav-link" onClick={() => setMenuOpen(false)}>Assets</Link>
+            <Link to="/risk-dashboard" className="nav-link" onClick={() => setMenuOpen(false)}>Risk Dashboard</Link>
+            <Link to="/report-incident" className="nav-link" onClick={() => setMenuOpen(false)}>Report Incident</Link>
+            <Link to="/subscription" className="nav-link" onClick={() => setMenuOpen(false)}>Subscription</Link>
+            <Link to="/chatbot" className="nav-link" onClick={() => setMenuOpen(false)}>Chatbot</Link>
             <button className="btn logout-btn" onClick={handleLogout}>Logout</button>
           </>
         )}
