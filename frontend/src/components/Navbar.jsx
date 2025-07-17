@@ -7,21 +7,16 @@ const Navbar = () => {
   const location = useLocation();
 
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
+    // Whenever location changes, re-check login status
     setIsLoggedIn(!!localStorage.getItem('token'));
-    setIsMenuOpen(false); // close menu on route change
   }, [location]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    setIsLoggedIn(false);
+    setIsLoggedIn(false); // 👈 ensure state is updated
     navigate('/login');
-  };
-
-  const toggleMenu = () => {
-    setIsMenuOpen((prev) => !prev);
   };
 
   return (
@@ -32,13 +27,7 @@ const Navbar = () => {
         </h1>
       </div>
 
-      <div className="menu-toggle" onClick={toggleMenu}>
-        <span className="bar"></span>
-        <span className="bar"></span>
-        <span className="bar"></span>
-      </div>
-
-      <div className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
+      <div className="nav-links">
         {!isLoggedIn ? (
           <>
             <Link to="/login" className="btn impact-btn">Login</Link>
