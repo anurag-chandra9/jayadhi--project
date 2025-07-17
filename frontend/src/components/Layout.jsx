@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
+import Footer from './Footer';
 import ChatbotInterface from './Chat/ChatbotInterface';
 
 const Layout = () => {
@@ -12,6 +13,7 @@ const Layout = () => {
       <main>
         <Outlet />
       </main>
+      <Footer />
 
       {/* Floating Chat Button */}
       <button

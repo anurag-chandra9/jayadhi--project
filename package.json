@@ -20,19 +20,22 @@
   "homepage": "https://github.com/anurag-chandra9/jayadhi--project#readme",
   "description": "",
   "dependencies": {
+    "axios": "^1.10.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "firebase-admin": "^13.4.0",
+    "framer-motion": "^12.23.6",
     "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.525.0",
     "mongoose": "^8.16.0",
     "nodemailer": "^7.0.5",
     "pdfkit": "^0.17.1",
-    "razorpay": "^2.9.6"
+    "razorpay": "^2.9.6",
+    "react-hot-toast": "^2.5.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
   }
 }
-

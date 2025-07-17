@@ -11,6 +11,7 @@ import ChatbotInterface from './components/Chat/ChatbotInterface';
 import HomePage from './components/Home';
 import SubscriptionForm from './components/SubscriptionForm';
 
+
 function App() {
   const isLoggedIn = !!localStorage.getItem('token');
 

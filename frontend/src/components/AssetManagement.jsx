@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { authService } from '../firebase/firebase'; // Ensure this path is correct
+import { authService } from "../firebase/firebase";
+import { Pencil, Trash2 } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
+import "./AssetManagement.css";
 
 function AssetManagement() {
   const [assets, setAssets] = useState([]);
@@ -14,13 +17,10 @@ function AssetManagement() {
     try {
       const res = await authService.makeAuthenticatedRequest("/api/assets");
       const data = await res.json();
-      // Adjust this depending on your API response structure:
-      // If the API returns { assets: [...] } use data.assets
-      // If it returns an array directly, use data
       const assetsArray = Array.isArray(data) ? data : data.assets || [];
       setAssets(assetsArray);
     } catch (err) {
-      alert("Error fetching assets");
+      toast.error("Error fetching assets");
       console.error(err);
     }
   };
@@ -38,7 +38,7 @@ function AssetManagement() {
 
     const currentUser = authService.currentUser;
     if (!currentUser) {
-      alert("User not authenticated");
+      toast.error("User not authenticated");
       return;
     }
 
@@ -55,6 +55,7 @@ function AssetManagement() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(cleanedForm),
         });
+        toast.success("Asset updated successfully!");
         setEditId(null);
       } else {
         await authService.makeAuthenticatedRequest("/api/assets", {
@@ -62,12 +63,66 @@ function AssetManagement() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(cleanedForm),
         });
+        toast.success("Asset added successfully!");
       }
       setForm({ name: "", type: "", value: 0 });
       fetchAssets();
     } catch (err) {
-      alert("Error saving asset");
+      toast.error("Error saving asset");
       console.error("POST/PUT error:", err);
+    }
+  };
+
+  const confirmDelete = (id) => {
+    toast((t) => (
+      <span style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <b>Confirm delete this asset?</b>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+          <button
+            onClick={() => {
+              deleteAsset(id);
+              toast.dismiss(t.id);
+            }}
+            style={{
+              background: "#ef4444",
+              color: "#fff",
+              padding: "4px 10px",
+              borderRadius: "4px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Yes
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            style={{
+              background: "#e5e7eb",
+              color: "#000",
+              padding: "4px 10px",
+              borderRadius: "4px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            No
+          </button>
+        </div>
+      </span>
+    ), {
+      duration: 5000,
+    });
+  };
+
+  const deleteAsset = async (id) => {
+    try {
+      await authService.makeAuthenticatedRequest(`/api/assets/${id}`, {
+        method: "DELETE",
+      });
+      toast.success("Asset deleted successfully!");
+      fetchAssets();
+    } catch (err) {
+      toast.error("Error deleting asset");
     }
   };
 
@@ -80,23 +135,11 @@ function AssetManagement() {
     setEditId(asset._id);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Delete this asset?")) {
-      try {
-        await authService.makeAuthenticatedRequest(`/api/assets/${id}`, {
-          method: "DELETE",
-        });
-        fetchAssets();
-      } catch (err) {
-        alert("Error deleting asset");
-      }
-    }
-  };
-
   return (
-    <div style={{ maxWidth: 600, margin: "auto" }}>
-      <h2>Asset Management</h2>
-      <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
+    <div className="asset-container">
+      <Toaster />
+      <h2>🗃️ Asset Management</h2>
+      <form onSubmit={handleSubmit} className="asset-form">
         <input
           type="text"
           name="name"
@@ -125,6 +168,7 @@ function AssetManagement() {
         {editId && (
           <button
             type="button"
+            className="cancel-btn"
             onClick={() => {
               setEditId(null);
               setForm({ name: "", type: "", value: 0 });
@@ -135,7 +179,7 @@ function AssetManagement() {
         )}
       </form>
 
-      <table border="1" width="100%">
+      <table className="asset-table">
         <thead>
           <tr>
             <th>Name</th>
@@ -150,10 +194,20 @@ function AssetManagement() {
               <tr key={asset._id}>
                 <td>{asset.name}</td>
                 <td>{asset.type}</td>
-                <td>{asset.value}</td>
+                <td>₹{asset.value.toLocaleString()}</td>
                 <td>
-                  <button onClick={() => handleEdit(asset)}>Edit</button>
-                  <button onClick={() => handleDelete(asset._id)}>Delete</button>
+                  <button
+                    className="icon-btn edit"
+                    onClick={() => handleEdit(asset)}
+                  >
+                    <Pencil size={18} />
+                  </button>
+                  <button
+                    className="icon-btn delete"
+                    onClick={() => confirmDelete(asset._id)}
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </td>
               </tr>
             ))

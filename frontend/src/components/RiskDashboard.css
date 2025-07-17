@@ -1,25 +1,30 @@
-/* RiskDashboard.css */
-
+/* Base container */
 .dashboard {
   padding: 2rem;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f4f7fa;
   min-height: 100vh;
   box-sizing: border-box;
+  overflow-x: hidden;
 }
 
+/* Dashboard title animation handled by Framer Motion */
 .dashboard-title {
   font-size: 2rem;
   color: #1f2937;
   margin-bottom: 1.5rem;
   font-weight: 600;
+  text-align: center;
+  animation: fadeInDown 0.6s ease-in-out;
 }
 
+/* Cards */
 .summary-cards {
   display: flex;
   flex-wrap: wrap;
   gap: 1.5rem;
   margin-bottom: 2rem;
+  justify-content: center;
 }
 
 .card {
@@ -29,11 +34,12 @@
   padding: 1rem 1.25rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
 }
 
 .card h3 {
@@ -48,27 +54,38 @@
   color: #2563eb;
 }
 
+/* Loading State */
 .loading {
   font-size: 1.2rem;
   color: #6b7280;
   text-align: center;
   padding: 2rem;
+  animation: fadeIn 0.6s ease-in-out;
 }
 
-.ip-controls, .blocked-ips, .report-incident-section, .recent-events {
+/* Reusable card sections */
+.ip-controls,
+.blocked-ips,
+.report-incident-section,
+.recent-events {
   background: #ffffff;
   padding: 1.5rem;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   margin-bottom: 2rem;
+  animation: fadeInUp 0.6s ease-in-out;
 }
 
-.ip-controls h3, .blocked-ips h3, .report-incident-section h3, .recent-events h3 {
+.ip-controls h3,
+.blocked-ips h3,
+.report-incident-section h3,
+.recent-events h3 {
   color: #1e40af;
   margin-bottom: 1rem;
   font-weight: 600;
 }
 
+/* IP Control Input + Buttons */
 .ip-controls input {
   width: 100%;
   max-width: 400px;
@@ -77,7 +94,12 @@
   border: 1px solid #d1d5db;
   border-radius: 8px;
   margin-bottom: 1rem;
-  box-sizing: border-box;
+  transition: border 0.2s ease-in-out;
+}
+
+.ip-controls input:focus {
+  border-color: #2563eb;
+  outline: none;
 }
 
 .ip-buttons {
@@ -94,37 +116,48 @@
   background-color: #2563eb;
   color: #ffffff;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .ip-buttons button:hover {
   background-color: #1e3a8a;
+  transform: scale(1.03);
 }
 
+/* Action message */
 .action-message {
   white-space: pre-line;
   font-weight: 500;
   color: #16a34a;
   margin-top: 0.5rem;
+  animation: fadeIn 0.5s ease-in-out;
 }
 
-.blocked-ips table, .recent-events table {
+/* Tables */
+.blocked-ips table,
+.recent-events table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
   font-size: 0.95rem;
+  animation: fadeInUp 0.4s ease;
 }
 
-.blocked-ips th, .blocked-ips td, .recent-events th, .recent-events td {
+.blocked-ips th,
+.blocked-ips td,
+.recent-events th,
+.recent-events td {
   padding: 0.75rem;
   border-bottom: 1px solid #e5e7eb;
   text-align: left;
 }
 
-.blocked-ips tr:hover, .recent-events tr:hover {
+.blocked-ips tr:hover,
+.recent-events tr:hover {
   background-color: #f9fafb;
 }
 
+/* Incident report */
 .report-incident-section {
   border-left: 6px solid #3b82f6;
   text-align: center;
@@ -145,15 +178,15 @@
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .report-incident-button:hover {
   background-color: #1e40af;
+  transform: translateY(-2px);
 }
 
-/* Responsive styles */
-
+/* Responsive design */
 @media (max-width: 1024px) {
   .summary-cards {
     flex-wrap: wrap;
@@ -161,7 +194,7 @@
   }
 
   .card {
-    flex: 1 1 45%; /* 2 cards per row */
+    flex: 1 1 45%;
     min-width: 220px;
   }
 }
@@ -173,7 +206,6 @@
 
   .dashboard-title {
     font-size: 1.5rem;
-    text-align: center;
   }
 
   .summary-cards {
@@ -183,7 +215,6 @@
 
   .card {
     flex: 1 1 100%;
-    min-width: auto;
   }
 
   .ip-controls input {
@@ -202,21 +233,12 @@
   .blocked-ips table,
   .recent-events table {
     display: block;
-    width: 100%;
     overflow-x: auto;
     white-space: nowrap;
   }
 
-  .blocked-ips th,
-  .blocked-ips td,
-  .recent-events th,
-  .recent-events td {
-    padding: 0.5rem;
-  }
-
   .report-incident-button {
     width: 100%;
-    padding: 0.75rem;
   }
 }
 
@@ -238,5 +260,37 @@
   .report-incident-section h3,
   .recent-events h3 {
     font-size: 1.1rem;
+  }
+}
+
+/* === Animations === */
+@keyframes fadeInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

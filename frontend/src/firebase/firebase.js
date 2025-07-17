@@ -283,4 +283,4 @@ const authService = new AuthService();
 const db = getFirestore(app);
 
 // Export for use in your application
-export { AuthService, authService, auth, db };
+export { AuthService, authService, auth, db, app };

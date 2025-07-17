@@ -21,17 +21,16 @@
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   text-transform: uppercase;
   user-select: none;
-  margin: 0; /* remove default spacing */
+  margin: 0;
 }
 
-/* Link wrapped around logo */
 .logo-link {
   text-decoration: none;
   color: #00ffe7;
 }
 
 .logo-link:hover {
-  color: #00ffe7; /* keep color consistent on hover */
+  color: #00ffe7;
 }
 
 /* Navigation links container */
@@ -109,4 +108,50 @@
   background-color: #1c213a;
   color: white;
   box-shadow: 0 0 10px rgba(255, 77, 109, 0.5);
+}
+
+/* Toggle button for mobile */
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+  gap: 5px;
+}
+
+.menu-toggle .bar {
+  height: 3px;
+  width: 25px;
+  background-color: #00ffe7;
+  border-radius: 5px;
+  transition: 0.3s;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: flex;
+  }
+
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 70px;
+    right: 0;
+    background-color: #0f162c;
+    flex-direction: column;
+    width: 100%;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+
+  .nav-links.active {
+    display: flex;
+  }
+
+  .nav-link,
+  .btn {
+    margin: 10px 0;
+    text-align: center;
+  }
 }

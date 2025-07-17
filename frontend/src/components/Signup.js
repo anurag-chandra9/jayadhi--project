@@ -37,7 +37,7 @@ const Signup = () => {
     setMessage('Account created successfully ✅');
 
     setTimeout(() => {
-      window.location.href = '/login';
+      window.location.href = '/risk-dashboard';
     }, 1500);
   } catch (error) {
     console.error(error);
