@@ -1,20 +1,33 @@
 import React, { useState, useEffect } from 'react';
 
 const PLANS = [
-  { name: 'Basic', amount: 799, description: 'Basic protection for individuals' },
-  { name: 'Pro', amount: 1999, description: 'Advanced security for small teams' },
-  { name: 'Enterprise', amount: 2999, description: 'Full suite for organizations' },
+  {
+    name: 'Basic',
+    amount: 799,
+    description: 'For individuals & small businesses',
+    features: ['3 domains', 'Email alerts', 'Basic dashboard'],
+  },
+  {
+    name: 'Pro',
+    amount: 1999,
+    description: 'For teams & growing companies',
+    features: ['10 domains', 'Automation', 'Analytics', 'Weekly threat insights'],
+  },
+  {
+    name: 'Enterprise',
+    amount: 2999,
+    description: 'For enterprises & SaaS platforms',
+    features: ['Unlimited domains', '24/7 support', 'Custom API', 'Advanced ML security', 'Audit tools'],
+  },
 ];
 
 const SubscriptionForm = () => {
-  const [selectedPlan, setSelectedPlan] = useState(PLANS[0]);
-  const [loading, setLoading] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState('');
   const [paymentError, setPaymentError] = useState('');
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [successDetails, setSuccessDetails] = useState(null);
   const [userId, setUserId] = useState('');
 
-  // Load Razorpay script
   useEffect(() => {
     if (!window.Razorpay) {
       const script = document.createElement('script');
@@ -24,7 +37,6 @@ const SubscriptionForm = () => {
     }
   }, []);
 
-  // Extract userId from JWT
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -37,14 +49,8 @@ const SubscriptionForm = () => {
     }
   }, []);
 
-  const handlePlanChange = (e) => {
-    const plan = PLANS.find(p => p.name === e.target.value);
-    setSelectedPlan(plan);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const handlePayment = async (plan) => {
+    setLoadingPlan(plan.name);
     setPaymentError('');
     setPaymentSuccess(false);
     setSuccessDetails(null);
@@ -54,10 +60,10 @@ const SubscriptionForm = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: selectedPlan.amount,
-          plan: selectedPlan.name,
+          amount: plan.amount,
+          plan: plan.name,
           userId,
-          receipt: `receipt_${selectedPlan.name}_${Date.now()}`
+          receipt: `receipt_${plan.name}_${Date.now()}`,
         }),
       });
 
@@ -65,14 +71,13 @@ const SubscriptionForm = () => {
 
       if (data.orderId && window.Razorpay) {
         const razorpayKey = process.env.REACT_APP_RAZORPAY_KEY_ID;
-        console.log('Razorpay Key:', razorpayKey);
 
         const options = {
           key: razorpayKey,
           amount: data.amount,
           currency: data.currency,
           name: 'CyberSentinel Subscription',
-          description: selectedPlan.description,
+          description: plan.description,
           order_id: data.orderId,
           handler: async function (response) {
             try {
@@ -87,30 +92,23 @@ const SubscriptionForm = () => {
                 }),
               });
 
-              const contentType = verifyRes.headers.get('content-type');
-              if (contentType && contentType.includes('application/json')) {
-                const verifyData = await verifyRes.json();
-                if (verifyRes.ok && verifyData.success) {
-                  setPaymentSuccess(true);
-                  setSuccessDetails({
-                    razorpay_payment_id: response.razorpay_payment_id,
-                    razorpay_order_id: response.razorpay_order_id
-                  });
-                } else {
-                  setPaymentError(verifyData.error || 'Payment verification failed');
-                }
+              const verifyData = await verifyRes.json();
+              if (verifyRes.ok && verifyData.success) {
+                setPaymentSuccess(true);
+                setSuccessDetails({
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  plan: plan.name,
+                  amount: plan.amount,
+                });
               } else {
-                const text = await verifyRes.text();
-                setPaymentError('Server error: ' + text);
+                setPaymentError(verifyData.error || 'Payment verification failed');
               }
             } catch (err) {
               setPaymentError('Payment verification failed');
             }
           },
-          prefill: {
-            email: '',
-          },
-          theme: { color: '#3399cc' },
+          theme: { color: '#4F46E5' },
         };
 
         const rzp = new window.Razorpay(options);
@@ -121,45 +119,75 @@ const SubscriptionForm = () => {
     } catch (err) {
       setPaymentError('Error: ' + err.message);
     }
-    setLoading(false);
+
+    setLoadingPlan('');
   };
-   console.log("🔐 Razorpay Key:", process.env.REACT_APP_RAZORPAY_KEY_ID);
 
   return (
-    <div style={{ maxWidth: 400, margin: '40px auto', padding: 24, background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px #eee' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Choose Your Subscription</h2>
-      {paymentSuccess && successDetails ? (
-        <div style={{ color: 'green', textAlign: 'center' }}>
-          <h3>Payment Successful!</h3>
-          <p>Plan: <b>{selectedPlan.name}</b></p>
-          <p>Amount: ₹{selectedPlan.amount}</p>
-          <p>Subscription activated.</p>
-          <p>Payment ID: {successDetails.razorpay_payment_id}</p>
-          <p>Order ID: {successDetails.razorpay_order_id}</p>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit}>
-          <label>
-            Plan:
-            <select value={selectedPlan.name} onChange={handlePlanChange} style={{ width: '100%', margin: '12px 0', padding: 8 }}>
-              {PLANS.map(plan => (
-                <option key={plan.name} value={plan.name}>
-                  {plan.name} - ₹{plan.amount}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div style={{ marginBottom: 12, color: '#555', fontSize: 14 }}>
-            {selectedPlan.description}
-          </div>
-          <button type="submit" disabled={loading} style={{ width: '100%', padding: 12, background: '#3399cc', color: '#fff', border: 'none', borderRadius: 6 }}>
-            {loading ? 'Processing...' : `Pay ₹${selectedPlan.amount}`}
-          </button>
-          {paymentError && <div style={{ color: 'red', marginTop: 16 }}>{paymentError}</div>}
-        </form>
-       
+    <div style={{ padding: '40px', fontFamily: 'Segoe UI, sans-serif', background: '#f9fafb', minHeight: '100vh' }}>
+      <h2 style={{ textAlign: 'center', fontSize: '32px', fontWeight: 'bold', marginBottom: '16px' }}>Choose Your Security Plan</h2>
+      <p style={{ textAlign: 'center', color: '#6b7280', marginBottom: '40px' }}>
+        Comprehensive web application security solutions for businesses of all sizes. Protect your digital assets with our advanced threat detection and monitoring.
+      </p>
 
+      {paymentSuccess && successDetails && (
+        <div style={{ color: 'green', textAlign: 'center', marginBottom: '24px' }}>
+          <h3>✅ Payment Successful!</h3>
+          <p><b>Plan:</b> {successDetails.plan}</p>
+          <p><b>Amount:</b> ₹{successDetails.amount}</p>
+          <p><b>Payment ID:</b> {successDetails.razorpay_payment_id}</p>
+          <p><b>Order ID:</b> {successDetails.razorpay_order_id}</p>
+        </div>
       )}
+
+      {paymentError && (
+        <div style={{ color: 'red', textAlign: 'center', marginBottom: '24px' }}>
+          {paymentError}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '24px' }}>
+        {PLANS.map((plan) => (
+          <div key={plan.name} style={{
+            border: '1px solid #e5e7eb',
+            borderRadius: 16,
+            padding: 28,
+            width: 280,
+            backgroundColor: '#fff',
+            boxShadow: '0 8px 16px rgba(0,0,0,0.06)',
+            textAlign: 'center',
+            transition: 'transform 0.3s',
+          }}>
+            <h3 style={{ fontSize: '22px', fontWeight: '600' }}>{plan.name}</h3>
+            <p style={{ fontSize: 16, color: '#6b7280', margin: '8px 0' }}>{plan.description}</p>
+            <h2 style={{ margin: '16px 0', fontSize: 28, fontWeight: '700' }}>
+              ₹{plan.amount} <span style={{ fontSize: 14, color: '#6b7280' }}>/month</span>
+            </h2>
+            <ul style={{ textAlign: 'left', marginTop: 16, paddingLeft: 20, color: '#374151', fontSize: 14 }}>
+              {plan.features.map((f, idx) => (
+                <li key={idx}>✔ {f}</li>
+              ))}
+            </ul>
+            <button
+              onClick={() => handlePayment(plan)}
+              disabled={loadingPlan === plan.name}
+              style={{
+                marginTop: 20,
+                padding: '12px 24px',
+                backgroundColor: '#4F46E5',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontWeight: '600',
+                width: '100%',
+              }}
+            >
+              {loadingPlan === plan.name ? 'Processing...' : `Choose ${plan.name}`}
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
