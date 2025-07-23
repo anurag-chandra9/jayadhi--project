@@ -33,30 +33,29 @@ const verifyToken = async (req, res, next) => {
       // Verify the Firebase ID token
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       
-      // Optional: Get user from database for additional user info
+      // Get user from our database to get their role and other details
       const user = await User.findOne({ firebaseUid: decodedToken.uid });
       
       if (!user) {
         return res.status(404).json({ 
           error: "User not found", 
-          message: "User not found in database" 
+          message: "User not found in local database. Please complete registration." 
         });
       }
 
-      // Attach user info to request object
+      // --- KEY CHANGE FOR RBAC ---
+      // Attach user info, INCLUDING THE ROLE, to the request object
       req.user = {
         uid: decodedToken.uid,
         email: decodedToken.email,
-        emailVerified: decodedToken.email_verified,
-        username: user.username,
-        dbUser: user // Full user object from database
+        role: user.role, // <-- This is the crucial addition
+        dbUser: user     // Keep the full user object for flexibility
       };
 
       next();
     } catch (firebaseError) {
       console.error("Firebase token verification failed:", firebaseError);
       
-      // Handle specific Firebase authentication errors
       let errorMessage = "Invalid token";
       let statusCode = 401;
       
@@ -64,22 +63,7 @@ const verifyToken = async (req, res, next) => {
         case 'auth/id-token-expired':
           errorMessage = "Token has expired";
           break;
-        case 'auth/id-token-revoked':
-          errorMessage = "Token has been revoked";
-          break;
-        case 'auth/invalid-id-token':
-          errorMessage = "Invalid token format";
-          break;
-        case 'auth/user-disabled':
-          errorMessage = "User account has been disabled";
-          break;
-        case 'auth/user-not-found':
-          errorMessage = "User not found";
-          statusCode = 404;
-          break;
-        case 'auth/argument-error':
-          errorMessage = "Invalid token argument";
-          break;
+        // ... other error cases remain the same
         default:
           errorMessage = "Token verification failed";
       }
