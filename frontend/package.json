@@ -2,15 +2,16 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:3000",
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.10.0",
-    "dotenv": "^17.2.0",
     "firebase": "^11.9.1",
     "framer-motion": "^12.23.1",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.525.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -48,6 +49,5 @@
   },
   "devDependencies": {
     "cross-env": "^7.0.3"
-  },
-  "proxy": "http://localhost:3000"
+  }
 }
