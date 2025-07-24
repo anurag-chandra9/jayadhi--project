@@ -1,0 +1,173 @@
+/* === Asset Container === */
+.asset-container {
+  max-width: 700px;
+  margin: auto;
+  padding: 2rem;
+  font-family: "Segoe UI", sans-serif;
+  background: rgba(10, 15, 36, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+/* === Header === */
+.asset-container h1 {
+  text-align: center;
+  color: #00ffe7;
+  text-shadow: 0 0 5px rgba(0, 255, 231, 0.6);
+}
+
+/* === Asset Form === */
+.asset-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.asset-form input {
+  padding: 0.75rem 1rem;
+  background: #1f2b54;
+  color: #ffffff;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.asset-form input:focus {
+  border-color: #00ffe7;
+  box-shadow: 0 0 5px rgba(0, 255, 255, 0.4);
+  outline: none;
+}
+
+/* === Buttons === */
+.asset-form button {
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #00ffe7, #4dc2f9);
+  color: #0a0f24;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+.asset-form button:hover {
+  background: linear-gradient(135deg, #4dc2f9, #00ffe7);
+  box-shadow: 0 0 15px rgba(0, 255, 231, 0.5);
+}
+
+.cancel-btn {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ccc !important;
+}
+
+/* === Table === */
+.asset-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: rgba(10, 15, 36, 0.4);
+  backdrop-filter: blur(6px);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.asset-table th,
+.asset-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e0f7ff;
+}
+
+.asset-table th {
+  background-color: rgba(0, 255, 255, 0.05);
+  color: #00ffe7;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+/* === Icon Buttons === */
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 6px;
+  padding: 4px;
+  transition: 0.2s;
+  font-size: 1.1rem;
+}
+
+.icon-btn.edit {
+  color: #00bfff;
+}
+
+.icon-btn.delete {
+  color: #ff4d6d;
+}
+
+.icon-btn:hover {
+  transform: scale(1.1);
+  opacity: 0.9;
+}
+
+/* === File Cell === */
+.file-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.file-info-compact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.file-icon {
+  font-size: 1.2rem;
+}
+
+.file-details-compact {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+}
+
+/* === File Action Buttons === */
+.file-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.file-action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #00ffe7;
+  font-size: 1.1rem;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.file-action-btn:hover {
+  background: rgba(0, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+/* Optional - separate styles for each type */
+.file-action-btn.download { color: #00ffe7; }
+.file-action-btn.view { color: #4dc2f9; }
+.file-action-btn.remove { color: #ff4d6d; }
+
+.file-action-btn:focus {
+  outline: none;
+  box-shadow: 0 0 6px rgba(0, 255, 255, 0.4);
+}
