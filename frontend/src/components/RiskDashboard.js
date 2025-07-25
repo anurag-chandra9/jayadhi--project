@@ -3,20 +3,11 @@ import { motion } from 'framer-motion';
 import './RiskDashboard.css';
 import { authService } from '../firebase/firebase';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // <-- 1. IMPORT THE AUTH HOOK
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.1, duration: 0.4 }
-  })
-};
+import { useAuth } from '../context/AuthContext';
 
 const RiskDashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth(); // <-- 2. GET THE USER OBJECT (contains role)
+  const { user } = useAuth();
 
   const [mainData, setMainData] = useState(null);
   const [wafData, setWafData] = useState(null);
@@ -28,43 +19,33 @@ const RiskDashboard = () => {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
-        // Everyone gets the main dashboard data
         const mainRes = await authService.makeAuthenticatedRequest('/api/dashboard');
         if (mainRes.ok) setMainData(await mainRes.json());
 
-        // --- KEY CHANGE: Only Admins fetch WAF data ---
-        if (user && user.role === 'Admin') {
+        if (user?.role === 'Admin') {
           const wafRes = await authService.makeAuthenticatedRequest('/api/waf/dashboard');
           if (wafRes.ok) setWafData(await wafRes.json());
         }
       } catch (err) {
-        console.error('Error fetching dashboard data:', err);
+        console.error('Error:', err);
       } finally {
         setLoading(false);
       }
     };
-
-    // Only fetch data if we have a logged-in user
-    if (user) {
-      fetchDashboardData();
-    }
-  }, [user]); // Re-run this effect if the user object changes (e.g., on login)
+    if (user) fetchDashboardData();
+  }, [user]);
 
   const handleIPAction = async (action) => {
-    // This function is now inside an admin-only component, so no extra checks needed here.
     try {
       const response = await authService.makeAuthenticatedRequest(`/api/waf/${action}-ip`, {
         method: 'POST',
         body: JSON.stringify(
-          action === 'block'
-            ? { ipAddress, reason: 'manual block' }
-            : { ipAddress }
+          action === 'block' ? { ipAddress, reason: 'manual block' } : { ipAddress }
         )
       });
       const data = await response.json();
       if (response.ok) {
         setActionMessage(`✅ ${data.message}`);
-        // Refetch data to show updated blocked IPs
         const wafRes = await authService.makeAuthenticatedRequest('/api/waf/dashboard');
         if (wafRes.ok) setWafData(await wafRes.json());
       } else {
@@ -75,81 +56,94 @@ const RiskDashboard = () => {
     }
   };
 
-  if (loading) return <div className="loading">Loading Risk Dashboard...</div>;
-
   const cardData = [
     { title: 'Total Assets', value: mainData?.totalAssets ?? 'N/A' },
     { title: 'High Severity Threats', value: mainData?.highSeverityThreats ?? 'N/A' },
     { title: 'Compliance Score', value: `${mainData?.complianceScore ?? 0}%` },
     { title: 'Overall Risk', value: mainData?.overallRiskLevel ?? 'N/A' },
-    // Conditionally show admin cards
-    ...(user?.role === 'Admin' ? [
-      { title: 'Total Blocked IPs', value: wafData?.stats?.totalBlockedIPs ?? 0 },
-      { title: 'Critical Events (24h)', value: wafData?.stats?.criticalEvents ?? 0 },
-      { title: 'Events Last 24h', value: wafData?.stats?.securityEvents24h ?? 0 },
-    ] : [])
+    ...(user?.role === 'Admin'
+      ? [
+          { title: 'Total Blocked IPs', value: wafData?.stats?.totalBlockedIPs ?? 0 },
+          { title: 'Critical Events (24h)', value: wafData?.stats?.criticalEvents ?? 0 },
+          { title: 'Events Last 24h', value: wafData?.stats?.securityEvents24h ?? 0 }
+        ]
+      : [])
   ];
+
+  if (loading) return <div className="dashboard-loading">Loading Risk Dashboard...</div>;
 
   return (
     <motion.div className="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-      <motion.h2 className="dashboard-title" initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>📊 Risk Analysis Dashboard</motion.h2>
+      <motion.h2 className="dashboard-title" initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
+        📊 Risk Analysis Dashboard
+      </motion.h2>
 
       <div className="summary-cards">
         {cardData.map((item, i) => (
-          <motion.div className="card" key={item.title} custom={i} variants={cardVariants} initial="hidden" animate="visible">
+          <motion.div className="dashboard-card" key={item.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
             <h3>{item.title}</h3>
             <p>{item.value}</p>
           </motion.div>
         ))}
       </div>
 
-      {/* --- 3. WRAP ALL ADMIN SECTIONS IN A ROLE CHECK --- */}
-      {user && user.role === 'Admin' && (
+      {user?.role === 'Admin' && (
         <>
-          <motion.div className="ip-controls" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+          <div className="admin-section ip-controls">
             <h3>🚦 Manual IP Control</h3>
-            <input
-              type="text"
-              placeholder="Enter IP address (e.g. 127.0.0.1)"
-              value={ipAddress}
-              onChange={(e) => setIpAddress(e.target.value)}
-            />
+            <input type="text" value={ipAddress} onChange={(e) => setIpAddress(e.target.value)} placeholder="Enter IP address" />
             <div className="ip-buttons">
               <button onClick={() => handleIPAction('block')}>Block IP</button>
               <button onClick={() => handleIPAction('unblock')}>Unblock IP</button>
             </div>
-            {actionMessage && <pre className="action-message">{actionMessage}</pre>}
-          </motion.div>
+            {actionMessage && <div className="action-message">{actionMessage}</div>}
+          </div>
 
-          <motion.div className="blocked-ips" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+          <div className="admin-section blocked-ips">
             <h3>🚫 Currently Blocked IPs</h3>
-            {wafData?.blockedIPs?.length > 0 ? (
+            {wafData?.blockedIPs?.length ? (
               <table>
-                {/* Table content remains the same */}
+                <thead><tr><th>IP Address</th><th>Reason</th><th>Date</th></tr></thead>
+                <tbody>
+                  {wafData.blockedIPs.map((ip) => (
+                    <tr key={ip.ip}>
+                      <td>{ip.ip}</td>
+                      <td>{ip.reason}</td>
+                      <td>{ip.timestamp}</td>
+                    </tr>
+                  ))}
+                </tbody>
               </table>
-            ) : (
-              <p>No currently blocked IPs</p>
-            )}
-          </motion.div>
+            ) : <p>No IPs currently blocked.</p>}
+          </div>
 
-          <motion.div className="recent-events" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+          <div className="admin-section recent-events">
             <h3>🛡️ Recent Security Events</h3>
-            {/* Table content remains the same */}
-          </motion.div>
+            {wafData?.recentEvents?.length ? (
+              <table>
+                <thead><tr><th>Type</th><th>Details</th><th>Time</th></tr></thead>
+                <tbody>
+                  {wafData.recentEvents.map((event, idx) => (
+                    <tr key={idx}>
+                      <td>{event.type}</td>
+                      <td>{event.description}</td>
+                      <td>{event.time}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : <p>No recent events.</p>}
+          </div>
         </>
       )}
 
-      {/* User-specific sections remain outside the admin check */}
-      <motion.div className="report-incident-section" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+      <div className="report-incident-section">
         <h3>📝 Incident Reporting</h3>
-        <p className="report-subtext">
-          Report a new cybersecurity incident for documentation and insurance processing.
-        </p>
+        <p>Report a new cybersecurity incident for documentation and action.</p>
         <button onClick={() => navigate('/report-incident')} className="report-incident-button">
-          ➕ Create New Incident Report
+          ➕ Report Incident
         </button>
-      </motion.div>
-
+      </div>
     </motion.div>
   );
 };

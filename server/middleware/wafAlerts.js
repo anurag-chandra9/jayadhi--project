@@ -97,13 +97,27 @@ class WAFAlertSystem {
   }
 
   async sendAlert(alertType, alertData) {
+    const emailAlertsEnabled = process.env.ENABLE_EMAIL_ALERTS === 'true';
+
+    // Always log the alert even if email is disabled
+    await this.logAlert({
+      type: alertType,
+      status: emailAlertsEnabled ? 'sending' : 'skipped',
+      ...alertData
+    });
+
+    if (!emailAlertsEnabled) {
+      console.log(`[Alert Skipped] Email alert suppressed for ${alertType}`);
+      return false;
+    }
+
     try {
       const adminEmail = WAFAlertSystem.getCurrentAdminEmail();
       const subject = this.generateSubject(alertType, alertData);
       const message = this.generateMessage(alertType, alertData);
 
       const mailOptions = {
-        from: '"Jayadhi WAF Alert System" <niranjanmemane47@gmail.com>',
+        from: '"CyberSentinel WAF Alert System" <niranjanmemane47@gmail.com>',
         to: adminEmail,
         subject,
         text: message,
@@ -111,9 +125,9 @@ class WAFAlertSystem {
       };
 
       const info = await this.transporter.sendMail(mailOptions);
-      
+
       console.log(`[Alert Sent] ${alertType} alert sent to ${adminEmail}`);
-      
+
       // Log the alert
       await this.logAlert({
         type: alertType,
@@ -127,7 +141,7 @@ class WAFAlertSystem {
       return true;
     } catch (error) {
       console.error('[Alert Error]', error.message);
-      
+
       // Log failed alert
       await this.logAlert({
         type: alertType,
@@ -140,6 +154,7 @@ class WAFAlertSystem {
     }
   }
 
+
   generateSubject(alertType, data) {
     const subjects = {
       'ip_blocked': `🚨 WAF Alert: IP Blocked - ${data.ipAddress}`,
@@ -147,15 +162,16 @@ class WAFAlertSystem {
       'rate_limit_exceeded': `🔄 WAF Alert: Rate Limit Exceeded - ${data.ipAddress}`,
       'suspicious_url': `🔍 WAF Alert: Suspicious URL Access - ${data.ipAddress}`,
       'failed_login_attempts': `🔐 WAF Alert: Multiple Failed Logins - ${data.ipAddress}`,
-      'security_event': `🛡️ WAF Alert: Security Event - ${data.eventType}`
+      'security_event': `🛡️ WAF Alert: Security Event - ${data.eventType}`,
+      'malicious_file_upload': `🔍 WAF Alert: Malicious File Upload Blocked - ${data.ipAddress}` // NEW
     };
-    
+
     return subjects[alertType] || `🚨 WAF Alert: ${alertType}`;
   }
 
   generateMessage(alertType, data) {
     const timestamp = new Date().toLocaleString();
-    
+
     let message = `WAF Security Alert\n`;
     message += `===================\n\n`;
     message += `Alert Type: ${alertType.toUpperCase()}\n`;
@@ -197,6 +213,13 @@ class WAFAlertSystem {
         message += `Origin: ${data.origin}\n`;
         break;
 
+      case 'malicious_file_upload':
+        message += `File Name: ${data.fileName}\n`;
+        message += `Reason: ${data.reason}\n`;
+        message += `Quarantine Path: ${data.quarantinePath}\n`;
+        message += `User Agent: ${data.userAgent || 'Unknown'}\n`;
+        break;
+
       default:
         message += `Event: ${data.eventType || alertType}\n`;
         message += `Description: ${data.description || 'No description available'}\n`;
@@ -204,7 +227,7 @@ class WAFAlertSystem {
 
     message += `\nOrigin: ${data.origin || 'Unknown'}\n`;
     message += `User Agent: ${data.userAgent || 'Unknown'}\n\n`;
-    message += `This is an automated alert from the Jayadhi WAF System.\n`;
+    message += `This is an automated alert from the CyberSentinel WAF System.\n`;
     message += `Please investigate this activity promptly.\n`;
 
     return message;
@@ -213,12 +236,12 @@ class WAFAlertSystem {
   generateHTMLMessage(alertType, data) {
     const timestamp = new Date().toLocaleString();
     const severityColor = this.getSeverityColor(data.severity || 'medium');
-    
+
     return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
         <h2 style="color: #dc3545; margin: 0;">🚨 WAF Security Alert</h2>
-        <p style="color: #6c757d; margin: 5px 0;">Jayadhi Web Application Firewall</p>
+        <p style="color: #6c757d; margin: 5px 0;">CyberSentinel Web Application Firewall</p>
       </div>
       
       <div style="background: white; padding: 20px; border: 1px solid #dee2e6; margin-top: 10px;">
@@ -248,7 +271,7 @@ class WAFAlertSystem {
       
       <div style="background: #e9ecef; padding: 15px; margin-top: 10px; border-radius: 4px; font-size: 14px; color: #495057;">
         <strong>⚠️ Action Required:</strong> Please investigate this security event promptly. 
-        This is an automated alert from the Jayadhi WAF System.
+        This is an automated alert from the CyberSentinel WAF System.
       </div>
     </div>`;
   }
@@ -256,7 +279,7 @@ class WAFAlertSystem {
   getSeverityColor(severity) {
     const colors = {
       'low': '#28a745',
-      'medium': '#ffc107', 
+      'medium': '#ffc107',
       'high': '#fd7e14',
       'critical': '#dc3545'
     };
@@ -265,10 +288,10 @@ class WAFAlertSystem {
 
   formatDuration(milliseconds) {
     if (!milliseconds) return 'Unknown';
-    
+
     const hours = Math.floor(milliseconds / (1000 * 60 * 60));
     const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (hours > 0) {
       return `${hours} hour${hours > 1 ? 's' : ''} ${minutes > 0 ? `${minutes} minute${minutes > 1 ? 's' : ''}` : ''}`;
     }
@@ -295,15 +318,15 @@ const sendSecurityEventAlert = (data) => alertSystem.sendAlert('security_event',
 module.exports = {
   WAFAlertSystem,
   sendIPBlockedAlert,
-  sendMaliciousPatternAlert, 
+  sendMaliciousPatternAlert,
   sendRateLimitAlert,
   sendSuspiciousURLAlert,
   sendFailedLoginAlert,
   sendSecurityEventAlert,
-  
+
   // Generic function
   sendAlert: (type, data) => alertSystem.sendAlert(type, data),
-  
+
   // Session management functions
   setAdminSession: WAFAlertSystem.setAdminSession,
   updateAdminActivity: WAFAlertSystem.updateAdminActivity,
