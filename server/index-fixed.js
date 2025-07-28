@@ -12,7 +12,6 @@ const AuthMiddleware = require('./middleware/Auth');
 const { authorize } = require('./middleware/rbacMiddleware');
 const apiRoutes = require('./routes/api');
 const authRoutes = require('./routes/auth');
-const adminRoutes = require('./routes/admin');
 
 dotenv.config();
 connectDB();
@@ -113,7 +112,6 @@ app.use('/auth', authRoutes);
 app.use('/admin',
     AuthMiddleware,
     authorize(['admin']),
-    adminRoutes
 );
 
 // Serve static files (reports)
