@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: cybersecurity-platform
+    env: node
+    plan: free
+    buildCommand: npm run build:render
+    startCommand: npm run start:production
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        fromService:
+          type: web
+          name: cybersecurity-platform
+          property: port
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: INSURANCE_EMAIL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        generateValue: true
+    healthCheckPath: /api/health
