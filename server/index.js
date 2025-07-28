@@ -1,3 +1,4 @@
+// server/index.js
 const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
@@ -5,6 +6,13 @@ const logger = require('./middleware/logger');
 const { firewallMiddleware } = require('./middleware/firewallMiddleware');
 const cors = require('cors');
 const path = require('path');
+
+// Import middleware and routes
+const AuthMiddleware = require('./middleware/Auth');
+const { authorize } = require('./middleware/rbacMiddleware');
+const apiRoutes = require('./routes/api');
+const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
 
 dotenv.config();
 connectDB();
@@ -14,17 +22,26 @@ const PORT = process.env.PORT || 3000;
 
 app.set('trust proxy', true);
 
-// ✅ CORS Configuration
+// CORS Configuration for Production and Development
 let allowedOrigins = [];
 
 if (process.env.ALLOWED_ORIGINS) {
   allowedOrigins = process.env.ALLOWED_ORIGINS.split(',').map(origin =>
     origin.trim().replace(/\/+$/, '')
   );
+} else if (process.env.NODE_ENV === 'production') {
+  // Production - Render automatically sets RENDER_EXTERNAL_URL
+  const renderUrl = process.env.RENDER_EXTERNAL_URL;
+  allowedOrigins = renderUrl ? [renderUrl] : ['https://your-app.onrender.com'];
 } else {
-  // Fallback for development
-  allowedOrigins = ['http://localhost:3001',
-    'http://localhost:3000'
+  // Development fallback
+  allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:5173',
+    'http://client1.local:3001',
+    'http://client2.local:3002',
+    'http://admin3.local:3003'
   ];
 }
 
@@ -33,7 +50,10 @@ app.use(cors({
     console.log('🌐 Incoming origin:', origin);
     console.log('✅ Allowed origins:', allowedOrigins);
 
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       console.error('⛔ Blocked by CORS:', origin);
@@ -43,11 +63,15 @@ app.use(cors({
   credentials: true,
 }));
 
-// 🚨 Early middlewares
+// Middlewares
 app.use(logger);
-app.use(firewallMiddleware);
 
-// 📦 Conditional JSON parsing - only for non-multipart
+// Conditionally use firewall in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(firewallMiddleware);
+}
+
+// Conditional JSON parsing - only for non-multipart
 app.use((req, res, next) => {
   const contentType = req.headers['content-type'];
 
@@ -59,21 +83,62 @@ app.use((req, res, next) => {
   express.json({ limit: '10mb' })(req, res, next);
 });
 
-// 🛣 Routes
-const apiRoutes = require('./routes/api');
-const authRoutes = require('./routes/auth');
-app.use('/api', apiRoutes);
-app.use('/auth', authRoutes);
-
-// 📂 Static file serving
-app.use('/reports', express.static(path.join(__dirname, 'reports')));
-
-// 🔗 Root route
-app.get('/', (req, res) => {
-  res.send('Welcome to Cybersecurity Platform API - Protected by WAF');
+// Health check endpoint for Render
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
-// 🧯 Global Error Handler
+// API Routes
+app.use('/api', (req, res, next) => {
+    console.log(`DEBUG-REQUEST-FLOW: Request hit /api mounting point: ${req.method} ${req.originalUrl}`);
+    next();
+}, apiRoutes);
+
+app.use('/auth', authRoutes);
+
+app.use('/admin',
+    AuthMiddleware,
+    authorize(['admin']),
+    adminRoutes
+);
+
+// Serve static files (reports)
+app.use('/reports', express.static(path.join(__dirname, 'reports')));
+
+// Root route - Automatic redirect to /home
+app.get('/', (req, res) => {
+  console.log('🏠 Root route accessed, redirecting to /home');
+  res.redirect(301, '/home');
+});
+
+// Serve React frontend build files for other static assets
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+// Catch all handler for React Router routes (excluding API routes)
+app.get('*', (req, res) => {
+  // Skip API routes
+  if (req.path.startsWith('/api') || req.path.startsWith('/auth') || req.path.startsWith('/admin') || req.path.startsWith('/reports')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  
+  const indexPath = path.join(__dirname, '../frontend/build/index.html');
+  
+  // Check if build file exists
+  if (require('fs').existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).json({ 
+      error: 'Frontend build not found', 
+      message: 'Please run npm run build first' 
+    });
+  }
+});
+
+// Global Error Handler
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
 
@@ -105,8 +170,32 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// 🚀 Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log('WAF (Web Application Firewall) is active and monitoring traffic');
+// Start server with error handling
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 CORS Origins: ${allowedOrigins.join(', ')}`);
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🛡️  WAF (Web Application Firewall) is active');
+  }
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use`);
+    process.exit(1);
+  } else {
+    console.error('❌ Server error:', error);
+    process.exit(1);
+  }
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('🛑 SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('✅ Server closed');
+    process.exit(0);
+  });
 });

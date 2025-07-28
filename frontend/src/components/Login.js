@@ -1,5 +1,7 @@
 // frontend/src/components/Login.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { authService } from '../firebase/firebase';
 import { Eye, EyeOff } from 'lucide-react';
 import './Login.css';

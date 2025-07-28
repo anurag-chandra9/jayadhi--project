@@ -7,13 +7,7 @@ const AuthTracker = require('../middleware/authTracker');
 const { WAFCore, WAFLogger } = require('../middleware/firewallMiddleware');
 const { setAdminSession } = require('../middleware/wafAlerts');
 
-// Initialize Firebase Admin SDK (check if already initialized)
-if (!admin.apps.length) {
-    const serviceAccount = require('../config/serviceAccountKey.json');
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-    });
-}
+// Firebase Admin SDK is initialized in Auth.js middleware - no need to initialize here
 
 // === NEW: Initialize Firestore from Admin SDK ===
 const db = admin.firestore();
