@@ -1,460 +1,177 @@
-const BlockedIP = require('../models/blockedIPModel');
-const SecurityEvent = require('../models/securityEventModel');
-const { WAFCore, WAFLogger } = require('../middleware/firewallMiddleware');
-const AuthTracker = require('../middleware/authTracker');
+// server/controllers/wafController.js
+const BlockedIP = require('../models/blockedIPModel'); // Assuming you have a BlockedIP Mongoose model
+const SecurityEvent = require('../models/securityEventModel'); // Assuming you log events
+const AuthTracker = require('../middleware/authTracker'); // To get getClientIP
+const { WAFLogger, WAFCore } = require('../middleware/firewallMiddleware'); // Assuming you use WAFLogger and WAFCore
 
-// Get WAF dashboard data
-exports.getWAFDashboard = async (req, res) => {
-  try {
-    const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const last7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+const getWAFDashboard = async (req, res) => {
+    console.log("WAF_CONTROLLER_DEBUG: getWAFDashboard function called.");
+    try {
+        const { uid, email, role } = req.user;
 
-    // Get statistics
-    const stats = {
-      totalBlockedIPs: await BlockedIP.countDocuments({ isTemporary: false }),
-      temporaryBlocks: await BlockedIP.countDocuments({ isTemporary: true, expiresAt: { $gt: new Date() } }),
-      securityEvents24h: await SecurityEvent.countDocuments({ timestamp: { $gte: last24Hours } }),
-      securityEvents7d: await SecurityEvent.countDocuments({ timestamp: { $gte: last7Days } }),
-      criticalEvents: await SecurityEvent.countDocuments({ 
-        severity: 'critical', 
-        timestamp: { $gte: last7Days } 
-      })
-    };
-
-    // Get recent security events
-    const recentEvents = await SecurityEvent.find()
-      .sort({ timestamp: -1 })
-      .limit(50)
-      .select('ipAddress eventType severity description timestamp blocked');
-
-    // Get blocked IPs
-    const blockedIPs = await BlockedIP.find({ 
-      $or: [
-        { isTemporary: false },
-        { expiresAt: { $gt: new Date() } }
-      ]
-    }).sort({ blockedAt: -1 }).limit(20);
-
-    // Event type distribution
-    const eventTypes = await SecurityEvent.aggregate([
-      { $match: { timestamp: { $gte: last7Days } } },
-      { $group: { _id: '$eventType', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
-    ]);
-
-    res.json({
-      stats,
-      recentEvents,
-      blockedIPs,
-      eventTypes
-    });
-  } catch (err) {
-    WAFLogger.error('Error fetching WAF dashboard data', { error: err.message });
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// Manually block an IP
-exports.blockIP = async (req, res) => {
-  try {
-    const { ipAddress, reason, duration, isTemporary = true } = req.body;
-    
-    if (!ipAddress || !reason) {
-      return res.status(400).json({ error: 'IP address and reason are required' });
-    }
-
-    // Normalize the IP address before blocking
-    const normalizedIP = WAFCore.normalizeIP(ipAddress);
-    const blockDuration = duration || 24 * 60 * 60 * 1000; // Default 24 hours
-    
-    const success = await WAFCore.blockIP(normalizedIP, reason, {
-      duration: blockDuration,
-      isTemporary,
-      userAgent: 'Manual Block'
-    });
-
-    if (success) {
-      res.json({ 
-        message: 'IP blocked successfully', 
-        originalIP: ipAddress,
-        normalizedIP: normalizedIP 
-      });
-    } else {
-      res.status(500).json({ error: 'Failed to block IP' });
-    }
-  } catch (err) {
-    WAFLogger.error('Error manually blocking IP', { error: err.message });
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// FIXED: Enhanced unblock function with comprehensive IP normalization
-exports.unblockIP = async (req, res) => {
-  try {
-    const { ipAddress } = req.body;
-
-    if (!ipAddress) {
-      return res.status(400).json({ error: 'IP address is required' });
-    }
-
-    const unblocker = req.user?.email || 'admin';
-    
-    // FIXED: Normalize the input IP address and generate all possible variations
-    const normalizedIP = WAFCore.normalizeIP(ipAddress);
-    const ipVariations = [
-      ipAddress,           // Original input
-      normalizedIP,        // Normalized version
-      '127.0.0.1',        // Standard localhost
-      '::1',              // IPv6 localhost
-      '::ffff:127.0.0.1', // IPv6 mapped IPv4 localhost
-      'localhost'         // Hostname
-    ];
-
-    // Remove duplicates
-    const uniqueIPs = [...new Set(ipVariations)];
-    
-    let totalDeleted = 0;
-    const deletedEntries = [];
-
-    WAFLogger.info('Starting comprehensive IP unblock process', { 
-      originalIP: ipAddress, 
-      normalizedIP,
-      ipVariations: uniqueIPs,
-      unblocker 
-    });
-
-    // 1. Try to unblock all IP variations
-    for (const ip of uniqueIPs) {
-      const regularDelete = await BlockedIP.deleteOne({ ipAddress: ip });
-      if (regularDelete.deletedCount > 0) {
-        totalDeleted += regularDelete.deletedCount;
-        deletedEntries.push(`regular IP: ${ip}`);
-        WAFLogger.info('Deleted regular IP block', { ipAddress: ip });
-      }
-    }
-
-    // 2. Try to unblock ALL possible client frontend variations for each IP
-    const clientOrigins = [
-      'http://client1.local:3001',
-      'http://client2.local:3002', 
-      'http://localhost:3001',
-      'http://localhost:3002'
-    ];
-    
-    for (const ip of uniqueIPs) {
-      for (const origin of clientOrigins) {
-        // OLD FORMAT: ip:origin
-        const oldClientKey = `${ip}:${origin}`;
-        const clientDelete = await BlockedIP.deleteOne({ ipAddress: oldClientKey });
-        if (clientDelete.deletedCount > 0) {
-          totalDeleted += clientDelete.deletedCount;
-          deletedEntries.push(`client frontend (old): ${oldClientKey}`);
-          WAFLogger.info('Deleted old format client block', { oldClientKey });
+        let blockedIPs;
+        if (role === 'admin') {
+            console.log("WAF_CONTROLLER_DEBUG: Admin fetching all blocked IPs.");
+            console.log("WAF_CONTROLLER_DEBUG: Initiating BlockedIP.find({}) query."); // NEW LOG
+            blockedIPs = await BlockedIP.find({}); // Fetch all from DB
+            console.log("WAF_CONTROLLER_DEBUG: BlockedIP.find({}) query completed."); // NEW LOG
+        } else {
+            console.log("WAF_CONTROLLER_DEBUG: Regular user fetching WAF data (returning empty array for now).");
+            blockedIPs = [];
         }
 
-        // NEW FORMAT: CLIENT:ip:origin
-        const newClientKey = `CLIENT:${ip}:${origin}`;
-        const newFormatDelete = await BlockedIP.deleteOne({ ipAddress: newClientKey });
-        if (newFormatDelete.deletedCount > 0) {
-          totalDeleted += newFormatDelete.deletedCount;
-          deletedEntries.push(`client frontend (new): ${newClientKey}`);
-          WAFLogger.info('Deleted new format client block', { newClientKey });
-        }
-      }
-    }
-
-    // 3. Use AuthTracker to clear any in-memory failed attempts for all IP variations
-    for (const ip of uniqueIPs) {
-      const authTrackerResult = await AuthTracker.unblockIP(ip);
-      if (authTrackerResult.success) {
-        WAFLogger.info('AuthTracker unblock completed', { 
-          ipAddress: ip, 
-          results: authTrackerResult.results 
+        console.log("WAF_CONTROLLER_DEBUG: Preparing to send response for getWAFDashboard."); // NEW LOG
+        res.status(200).json({
+            success: true,
+            message: 'WAF Dashboard data retrieved successfully.',
+            blockedIPs: blockedIPs
         });
-      }
+
+    } catch (error) {
+        console.error('WAF_CONTROLLER_ERROR: Error in getWAFDashboard:', error);
+        res.status(500).json({ message: 'Failed to retrieve WAF dashboard data.', error: error.message || 'Unknown error' });
     }
-
-    // 4. Additional cleanup: Find any blocks that might have any of the IPs as part of a composite key
-    for (const ip of uniqueIPs) {
-      const compositeBlocks = await BlockedIP.find({ 
-        ipAddress: { $regex: ip.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
-      });
-      
-      for (const block of compositeBlocks) {
-        if (!uniqueIPs.includes(block.ipAddress)) {
-          const compositeDelete = await BlockedIP.deleteOne({ _id: block._id });
-          if (compositeDelete.deletedCount > 0) {
-            totalDeleted += compositeDelete.deletedCount;
-            deletedEntries.push(`composite block: ${block.ipAddress}`);
-            WAFLogger.info('Deleted composite block', { blockKey: block.ipAddress });
-          }
-        }
-      }
-    }
-
-    // 5. Clear any cached entries in WAF core for all IP variations
-    if (WAFCore.clearIPCache) {
-      uniqueIPs.forEach(ip => WAFCore.clearIPCache(ip));
-    }
-
-    // 6. Log the unblocking action
-    if (totalDeleted > 0) {
-      await SecurityEvent.create({
-        ipAddress: normalizedIP,
-        eventType: 'ip_unblocked',
-        severity: 'info',
-        description: `IP and related blocks manually unblocked by ${unblocker}. Original IP: ${ipAddress}, Normalized: ${normalizedIP}. Deleted: ${deletedEntries.join(', ')}`,
-        requestUrl: req.originalUrl,
-        requestMethod: req.method,
-        userAgent: req.headers['user-agent'],
-        payload: { 
-          originalIP: ipAddress,
-          normalizedIP,
-          ipVariations: uniqueIPs,
-          deletedEntries, 
-          totalDeleted, 
-          unblocker 
-        }
-      });
-
-      WAFLogger.info('IP and related blocks unblocked successfully', { 
-        originalIP: ipAddress,
-        normalizedIP,
-        ipVariations: uniqueIPs,
-        by: unblocker, 
-        totalDeleted,
-        deletedEntries 
-      });
-
-      res.json({ 
-        success: true,
-        message: 'IP and related blocks unblocked successfully', 
-        originalIP: ipAddress,
-        normalizedIP,
-        ipVariations: uniqueIPs,
-        by: unblocker,
-        totalDeleted,
-        deletedEntries
-      });
-    } else {
-      WAFLogger.warn('No blocks found for unblocking', { 
-        originalIP: ipAddress, 
-        normalizedIP,
-        ipVariations: uniqueIPs,
-        by: unblocker 
-      });
-      
-      res.status(404).json({ 
-        success: false,
-        error: 'No blocks found for this IP address',
-        originalIP: ipAddress,
-        normalizedIP,
-        ipVariations: uniqueIPs,
-        message: 'IP was not blocked or blocks have already expired',
-        searchedFor: [
-          ...uniqueIPs,
-          ...clientOrigins.flatMap(origin => 
-            uniqueIPs.flatMap(ip => [
-              `${ip}:${origin}`,
-              `CLIENT:${ip}:${origin}`
-            ])
-          )
-        ]
-      });
-    }
-
-  } catch (err) {
-    WAFLogger.error('Error unblocking IP', { 
-      originalIP: req.body.ipAddress, 
-      error: err.message 
-    });
-    res.status(500).json({ 
-      success: false,
-      error: err.message,
-      message: 'Internal server error during unblocking process'
-    });
-  }
 };
 
-// Get security events with filtering
-exports.getSecurityEvents = async (req, res) => {
-  try {
-    const { 
-      page = 1, 
-      limit = 50, 
-      severity, 
-      eventType, 
-      ipAddress,
-      startDate,
-      endDate 
-    } = req.query;
+const blockIP = async (req, res) => {
+    const ipAddress = req.body.ipAddress;
+    const ip = AuthTracker.getClientIP(req);
+    console.log(`WAF_CONTROLLER_DEBUG: blockIP function called for IP: ${ipAddress}`);
+    try {
+        if (!ipAddress) {
+            return res.status(400).json({ message: 'IP address is required.' });
+        }
+        const reason = req.body.reason || 'manual block';
+        const duration = req.body.duration || 24 * 60 * 60 * 1000;
+        const isTemporary = req.body.isTemporary !== undefined ? req.body.isTemporary : true;
 
-    const query = {};
-    
-    if (severity) query.severity = severity;
-    if (eventType) query.eventType = eventType;
-    
-    // FIXED: Handle IP address search with normalization
-    if (ipAddress) {
-      const normalizedIP = WAFCore.normalizeIP(ipAddress);
-      const ipVariations = [
-        ipAddress,
-        normalizedIP,
-        '127.0.0.1',
-        '::1',
-        '::ffff:127.0.0.1'
-      ];
-      const uniqueIPs = [...new Set(ipVariations)];
-      
-      query.ipAddress = { $in: uniqueIPs };
-    }
-    
-    if (startDate || endDate) {
-      query.timestamp = {};
-      if (startDate) query.timestamp.$gte = new Date(startDate);
-      if (endDate) query.timestamp.$lte = new Date(endDate);
-    }
-
-    const events = await SecurityEvent.find(query)
-      .sort({ timestamp: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
-
-    const total = await SecurityEvent.countDocuments(query);
-
-    res.json({
-      events,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
-      total
-    });
-  } catch (err) {
-    WAFLogger.error('Error fetching security events', { error: err.message });
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// FIXED: Enhanced check block status function with comprehensive IP checking
-exports.checkBlockStatus = async (req, res) => {
-  try {
-    const { ipAddress } = req.query;
-    
-    if (!ipAddress) {
-      return res.status(400).json({ error: 'IP address is required' });
-    }
-
-    // FIXED: Generate all possible IP variations
-    const normalizedIP = WAFCore.normalizeIP(ipAddress);
-    const ipVariations = [
-      ipAddress,           // Original input
-      normalizedIP,        // Normalized version
-      '127.0.0.1',        // Standard localhost
-      '::1',              // IPv6 localhost
-      '::ffff:127.0.0.1', // IPv6 mapped IPv4 localhost
-      'localhost'         // Hostname
-    ];
-
-    // Remove duplicates
-    const uniqueIPs = [...new Set(ipVariations)];
-    const blocks = [];
-    
-    // Check all IP variations for regular blocks
-    for (const ip of uniqueIPs) {
-      const regularBlock = await BlockedIP.findOne({ ipAddress: ip });
-      if (regularBlock) {
-        blocks.push({ 
-          type: 'regular', 
-          ip: ip,
-          key: ip,
-          block: regularBlock,
-          isActive: regularBlock.isActive()
+        console.log("WAF_CONTROLLER_DEBUG: Calling WAFCore.blockIP.");
+        const success = await WAFCore.blockIP(ipAddress, reason, {
+            duration: duration,
+            isTemporary: isTemporary,
+            blockedBy: req.user.email,
+            userAgent: req.headers['user-agent']
         });
-      }
-    }
+        console.log("WAF_CONTROLLER_DEBUG: WAFCore.blockIP completed. Success:", success);
 
-    // Client frontend blocks
-    const clientOrigins = [
-      'http://client1.local:3001',
-      'http://client2.local:3002', 
-      'http://localhost:3001',
-      'http://localhost:3002'
-    ];
-    
-    for (const ip of uniqueIPs) {
-      for (const origin of clientOrigins) {
-        // OLD FORMAT: ip:origin
-        const oldClientKey = `${ip}:${origin}`;
-        const clientBlock = await BlockedIP.findOne({ ipAddress: oldClientKey });
-        if (clientBlock) {
-          blocks.push({ 
-            type: 'client_old', 
-            ip: ip,
-            origin, 
-            key: oldClientKey,
-            block: clientBlock,
-            isActive: clientBlock.isActive()
-          });
+        if (success) {
+            res.json({
+                message: 'IP blocked successfully',
+                ipAddress: ipAddress
+            });
+        } else {
+            res.status(500).json({ error: 'Failed to block IP' });
         }
-        
-        // NEW FORMAT: CLIENT:ip:origin
-        const newClientKey = `CLIENT:${ip}:${origin}`;
-        const newClientBlock = await BlockedIP.findOne({ ipAddress: newClientKey });
-        if (newClientBlock) {
-          blocks.push({ 
-            type: 'client_new', 
-            ip: ip,
-            origin, 
-            key: newClientKey,
-            block: newClientBlock,
-            isActive: newClientBlock.isActive()
-          });
-        }
-      }
+    } catch (err) {
+        console.error('WAF_CONTROLLER_ERROR: Error manually blocking IP', { error: err.message });
+        res.status(500).json({ error: err.message });
     }
+};
 
-    // Also check for any composite blocks that might contain any of the IPs
-    for (const ip of uniqueIPs) {
-      const compositeBlocks = await BlockedIP.find({ 
-        ipAddress: { $regex: ip.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
-      });
-      
-      for (const block of compositeBlocks) {
-        if (!uniqueIPs.includes(block.ipAddress) && !blocks.find(b => b.key === block.ipAddress)) {
-          blocks.push({
-            type: 'composite',
-            ip: ip,
-            key: block.ipAddress,
-            block: block,
-            isActive: block.isActive()
-          });
+const unblockIP = async (req, res) => {
+    const ipAddress = req.body.ipAddress;
+    const ip = AuthTracker.getClientIP(req);
+    console.log(`WAF_CONTROLLER_DEBUG: unblockIP function called for IP: ${ipAddress}`);
+    try {
+        if (!ipAddress) {
+            return res.status(400).json({ message: 'IP address is required.' });
         }
-      }
+
+        console.log("WAF_CONTROLLER_DEBUG: Calling AuthTracker.unblockIP.");
+        const unblockResult = await AuthTracker.unblockIP(ipAddress);
+        console.log("WAF_CONTROLLER_DEBUG: AuthTracker.unblockIP completed. Result:", unblockResult);
+
+        if (unblockResult.success) {
+            res.json({ success: true, message: `IP ${ipAddress} has been successfully unblocked.`, details: unblockResult.results });
+        } else {
+            res.status(404).json({ success: false, message: unblockResult.error || `No active blocks found for ${ipAddress}.` });
+        }
+
+    } catch (error) {
+        console.error('WAF_CONTROLLER_ERROR: Error unblocking IP:', error);
+        res.status(500).json({ message: 'Failed to unblock IP.', error: error.message || 'Unknown error' });
     }
+};
 
-    // Filter only active blocks
-    const activeBlocks = blocks.filter(b => b.isActive);
+const getSecurityEvents = async (req, res) => {
+    console.log("WAF_CONTROLLER_DEBUG: getSecurityEvents function called.");
+    try {
+        const { page = 1, limit = 50, severity, eventType, ipAddress, startDate, endDate } = req.query;
+        const { uid, email, role } = req.user;
 
-    res.json({
-      originalIP: ipAddress,
-      normalizedIP,
-      ipVariations: uniqueIPs,
-      isBlocked: activeBlocks.length > 0,
-      totalBlocks: blocks.length,
-      activeBlocks: activeBlocks.length,
-      blocks: blocks.map(b => ({
-        type: b.type,
-        ip: b.ip,
-        key: b.key,
-        origin: b.origin,
-        isActive: b.isActive,
-        reason: b.block.reason,
-        blockedAt: b.block.blockedAt,
-        expiresAt: b.block.expiresAt,
-        isTemporary: b.block.isTemporary
-      }))
-    });
-  } catch (err) {
-    WAFLogger.error('Error checking block status', { error: err.message });
-    res.status(500).json({ error: err.message });
-  }
+        const query = {};
+
+        if (severity) query.severity = severity;
+        if (eventType) query.eventType = eventType;
+
+        if (ipAddress) {
+            const normalizedIP = WAFCore.normalizeIP(ipAddress);
+            const ipVariations = [
+                ipAddress,
+                normalizedIP,
+                '127.0.0.1',
+                '::1',
+                '::ffff:127.0.0.1'
+            ];
+            const uniqueIPs = [...new Set(ipVariations)];
+            query.ipAddress = { $in: uniqueIPs };
+        }
+
+        if (startDate || endDate) {
+            query.timestamp = {};
+            if (startDate) query.timestamp.$gte = new Date(startDate);
+            if (endDate) query.timestamp.$lte = new Date(endDate);
+        }
+
+        if (role !== 'admin') {
+            console.log("WAF_CONTROLLER_DEBUG: Non-admin user fetching security events. Returning empty array for now.");
+            return res.json({ events: [], totalPages: 0, currentPage: page, total: 0 });
+        }
+
+        console.log("WAF_CONTROLLER_DEBUG: Admin fetching all security events from DB.");
+        const events = await SecurityEvent.find(query)
+            .sort({ timestamp: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit);
+        console.log("WAF_CONTROLLER_DEBUG: SecurityEvent.find query completed. Results count:", events.length);
+
+        const total = await SecurityEvent.countDocuments(query);
+
+        res.json({
+            events,
+            totalPages: Math.ceil(total / limit),
+            currentPage: page,
+            total
+        });
+    } catch (err) {
+        WAFLogger.error('WAF_CONTROLLER_ERROR: Error fetching security events', { error: err.message });
+        res.status(500).json({ error: err.message });
+    }
+};
+
+const checkBlockStatus = async (req, res) => {
+    console.warn("WAF_CONTROLLER_WARN: checkBlockStatus called. This function might be redundant or misplaced.");
+    try {
+        const { ipAddress } = req.query;
+
+        if (!ipAddress) {
+            return res.status(400).json({ error: 'IP address is required' });
+        }
+
+        const isBlocked = await WAFCore.isIPBlocked(ipAddress);
+
+        res.json({ ipAddress, isBlocked });
+    } catch (err) {
+        console.error('WAF_CONTROLLER_ERROR: Error checking block status:', err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+
+module.exports = {
+    getWAFDashboard,
+    blockIP,
+    unblockIP,
+    getSecurityEvents,
+    checkBlockStatus
 };

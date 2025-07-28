@@ -162,36 +162,55 @@ router.post('/verify-token', async (req, res) => {
 // Your frontend's loginWithFirebase calls client-side Firebase auth, gets an ID token,
 // and then sends that ID token here for backend validation and user data retrieval.
 router.post('/firebase-login', async (req, res) => {
+    console.log("FIREBASE_LOGIN_DEBUG: /firebase-login route hit."); // NEW LOG
     try {
         const { idToken } = req.body;
         const ipAddress = AuthTracker.getClientIP(req);
 
         if (!idToken) {
+            console.log("FIREBASE_LOGIN_DEBUG: ID token is missing."); // NEW LOG
             return res.status(400).json({ message: 'Firebase ID token is required' });
         }
 
         // Check if client is blocked
+        console.log("FIREBASE_LOGIN_DEBUG: Checking if client is blocked."); // NEW LOG
         const isBlocked = await AuthTracker.isClientBlocked(req);
         if (isBlocked) {
+            console.log("FIREBASE_LOGIN_DEBUG: Client is blocked."); // NEW LOG
             return res.status(403).json({
                 message: 'Access denied. Your access has been blocked due to suspicious activity.'
             });
         }
 
         // Verify the Firebase ID token
+        console.log("FIREBASE_LOGIN_DEBUG: Attempting to verify Firebase ID token."); // NEW LOG
         const decodedToken = await admin.auth().verifyIdToken(idToken);
+        console.log("FIREBASE_LOGIN_DEBUG: ID token verified. UID:", decodedToken.uid); // NEW LOG
+
+        console.log("FIREBASE_LOGIN_DEBUG: Attempting to find user in MongoDB with firebaseUid:", decodedToken.uid); // NEW LOG
         const user = await User.findOne({ firebaseUid: decodedToken.uid });
+        console.log("FIREBASE_LOGIN_DEBUG: MongoDB user find result:", user ? user.email : 'Not Found'); // NEW LOG
 
         if (!user) {
+            console.log("FIREBASE_LOGIN_DEBUG: User not found in MongoDB."); // NEW LOG
             return res.status(404).json({ message: 'User not found in database' });
         }
 
+        // --- CRITICAL FIX FOR EXISTING USERS' ROLE CASE ---
+        // Ensure the role is lowercase before saving, to match the updated enum
+        if (user.role && typeof user.role === 'string') {
+            user.role = user.role.toLowerCase();
+            console.log("FIREBASE_LOGIN_DEBUG: Converted user role to lowercase:", user.role); // NEW LOG
+        }
+
         // Record successful login
+        console.log("FIREBASE_LOGIN_DEBUG: Recording successful login."); // NEW LOG
         await AuthTracker.recordSuccessfulLogin(req, user.email);
 
         // Update user's last login
+        console.log("FIREBASE_LOGIN_DEBUG: Updating user's last login."); // NEW LOG
         user.lastLogin = new Date();
-        await user.save();
+        await user.save(); // This save should now work without enum validation error
 
         WAFLogger.info('Firebase token login successful', {
             email: user.email,
@@ -199,6 +218,7 @@ router.post('/firebase-login', async (req, res) => {
             firebaseUid: user.firebaseUid
         });
 
+        console.log("FIREBASE_LOGIN_DEBUG: Sending success response."); // NEW LOG
         res.json({
             success: true,
             message: 'Firebase login successful',
@@ -210,15 +230,12 @@ router.post('/firebase-login', async (req, res) => {
             }
         });
     } catch (error) {
-        WAFLogger.error('Firebase login error', {
-            error: error.message,
-            ipAddress: AuthTracker.getClientIP(req)
-        });
+        console.error('FIREBASE_LOGIN_ERROR: Error during Firebase login backend process:', error); // NEW LOG
 
         if (error.code && error.code.startsWith('auth/')) {
             return res.status(401).json({ message: 'Invalid Firebase token' });
         }
-
+        // This is the generic 500 error that was being returned
         res.status(500).json({ message: 'Server error during Firebase login' });
     }
 });

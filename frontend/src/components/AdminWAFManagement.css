@@ -1,0 +1,139 @@
+/* frontend/src/components/AdminWAFManagement.css */
+.admin-waf-management-container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 30px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: #fff;
+}
+
+.admin-waf-management-container h2,
+.admin-waf-management-container h3 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.waf-action-form .form-group {
+    margin-bottom: 15px;
+}
+
+.waf-action-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
+}
+
+.waf-action-form input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.waf-action-form button[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.waf-action-form button[type="submit"]:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.waf-action-form button[type="submit"]:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.message {
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
+}
+
+.admin-divider {
+    margin: 40px 0;
+    border: 0;
+    border-top: 1px solid #eee;
+}
+
+.waf-ips-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.waf-ips-table th,
+.waf-ips-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.waf-ips-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: #333;
+}
+
+.waf-ips-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.waf-ips-table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.action-button.unblock-button {
+    background-color: #28a745; /* Green */
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+.action-button.unblock-button:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+.action-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.admin-access-denied {
+    text-align: center;
+    color: #dc3545;
+    margin-top: 100px;
+}
+.admin-access-denied h2 {
+    color: #dc3545;
+}
