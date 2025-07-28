@@ -6,14 +6,13 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server/index.js",
     "build": "cd frontend && npm run build",
-    "build:render": "npm install && cd frontend && npm install && npm run build:production",
+    "build:render": "node build.js",
     "start": "node server/index.js",
     "start:production": "NODE_ENV=production node server/index.js",
     "deploy": "npm run build && npm start",
     "install-all": "npm install && cd frontend && npm install",
     "dev-frontend": "cd frontend && npm start",
-    "dev-backend": "nodemon server/index.js",
-    "postinstall": "cd frontend && npm install"
+    "dev-backend": "nodemon server/index.js"
   },
   "repository": {
     "type": "git",
