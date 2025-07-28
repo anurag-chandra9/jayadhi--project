@@ -59,6 +59,15 @@ async function main() {
     }
 
     // Step 4: Build the frontend
+    console.log('📁 Current working directory:', process.cwd());
+    console.log('📁 Frontend path:', frontendPath);
+    
+    // Check if frontend directory exists
+    if (!fs.existsSync(frontendPath)) {
+      console.error('❌ Frontend directory not found at:', frontendPath);
+      process.exit(1);
+    }
+    
     runCommand('npm run build', 'Building React frontend', frontendPath);
 
     // Step 5: Verify build output
