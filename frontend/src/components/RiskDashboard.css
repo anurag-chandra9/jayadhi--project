@@ -1,296 +1,178 @@
-/* Base container */
+:root {
+  --primary-color: #00ffe7;
+  --gradient-start: #0f2027;
+  --gradient-end: #203a43;
+  --card-bg: #1e293b;
+  --text-light: #f1f5f9;
+  --text-muted: #cbd5e1;
+  --danger: #ef4444;
+  --button-bg: #111827;
+  --radius: 20px;
+  --shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
 .dashboard {
-  padding: 2rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f4f7fa;
   min-height: 100vh;
-  box-sizing: border-box;
-  overflow-x: hidden;
-}
-
-/* Dashboard title animation handled by Framer Motion */
-.dashboard-title {
-  font-size: 2rem;
-  color: #1f2937;
-  margin-bottom: 1.5rem;
-  font-weight: 600;
-  text-align: center;
-  animation: fadeInDown 0.6s ease-in-out;
-}
-
-/* Cards */
-.summary-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  justify-content: center;
-}
-
-.card {
-  flex: 1 1 220px;
-  background: #ffffff;
-  border-left: 6px solid #3b82f6;
-  padding: 1rem 1.25rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.card:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
-}
-
-.card h3 {
-  font-size: 1rem;
-  color: #111827;
-  margin-bottom: 0.25rem;
-}
-
-.card p {
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: #2563eb;
-}
-
-/* Loading State */
-.loading {
-  font-size: 1.2rem;
-  color: #6b7280;
-  text-align: center;
   padding: 2rem;
-  animation: fadeIn 0.6s ease-in-out;
+  background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+  color: var(--text-light);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Reusable card sections */
-.ip-controls,
-.blocked-ips,
-.report-incident-section,
-.recent-events {
-  background: #ffffff;
+.dashboard-title {
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 2.5rem;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.dashboard-card {
+  background-color: var(--card-bg);
+  border-radius: var(--radius);
   padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  margin-bottom: 2rem;
-  animation: fadeInUp 0.6s ease-in-out;
+  box-shadow: var(--shadow);
+  text-align: center;
+  transition: transform 0.3s ease;
 }
 
-.ip-controls h3,
-.blocked-ips h3,
-.report-incident-section h3,
-.recent-events h3 {
-  color: #1e40af;
+.dashboard-card:hover {
+  transform: translateY(-5px);
+}
+
+.dashboard-card h3 {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-card p {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: var(--text-light);
+}
+
+.admin-section {
+  margin-bottom: 3rem;
+}
+
+.admin-section h3 {
+  font-size: 1.3rem;
+  color: var(--primary-color);
   margin-bottom: 1rem;
-  font-weight: 600;
 }
 
-/* IP Control Input + Buttons */
 .ip-controls input {
-  width: 100%;
-  max-width: 400px;
-  padding: 0.6rem;
+  padding: 0.6rem 1rem;
+  width: 250px;
+  background-color: var(--button-bg);
+  color: var(--text-light);
+  border: 1px solid var(--primary-color);
+  border-radius: var(--radius);
+  margin-right: 1rem;
   font-size: 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  transition: border 0.2s ease-in-out;
-}
-
-.ip-controls input:focus {
-  border-color: #2563eb;
-  outline: none;
-}
-
-.ip-buttons {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
 }
 
 .ip-buttons button {
-  padding: 0.5rem 1rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 6px;
-  background-color: #2563eb;
-  color: #ffffff;
+  padding: 0.6rem 1.2rem;
+  margin: 0.5rem;
+  font-size: 0.95rem;
+  background-color: transparent;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition: background-color 0.3s ease;
 }
 
 .ip-buttons button:hover {
-  background-color: #1e3a8a;
-  transform: scale(1.03);
+  background-color: var(--primary-color);
+  color: #000;
 }
 
-/* Action message */
 .action-message {
-  white-space: pre-line;
-  font-weight: 500;
-  color: #16a34a;
-  margin-top: 0.5rem;
-  animation: fadeIn 0.5s ease-in-out;
+  margin-top: 1rem;
+  color: var(--text-muted);
 }
 
-/* Tables */
-.blocked-ips table,
-.recent-events table {
+table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
-  font-size: 0.95rem;
-  animation: fadeInUp 0.4s ease;
+  background-color: var(--card-bg);
+  border-radius: var(--radius);
+  overflow: hidden;
 }
 
-.blocked-ips th,
-.blocked-ips td,
-.recent-events th,
-.recent-events td {
+table thead {
+  background-color: #334155;
+}
+
+table th,
+table td {
   padding: 0.75rem;
-  border-bottom: 1px solid #e5e7eb;
   text-align: left;
+  color: var(--text-light);
 }
 
-.blocked-ips tr:hover,
-.recent-events tr:hover {
-  background-color: #f9fafb;
+table tbody tr:nth-child(even) {
+  background-color: #1f2937;
 }
 
-/* Incident report */
 .report-incident-section {
-  border-left: 6px solid #3b82f6;
   text-align: center;
+  padding: 2rem;
+  background-color: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
-.report-subtext {
-  color: #4b5563;
-  margin-bottom: 1.25rem;
-  font-size: 0.95rem;
+.report-incident-section h3 {
+  font-size: 1.4rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.report-incident-section p {
+  margin-bottom: 1rem;
+  color: var(--text-muted);
 }
 
 .report-incident-button {
-  padding: 0.75rem 1.5rem;
+  padding: 0.7rem 1.4rem;
   font-size: 1rem;
-  font-weight: 600;
-  background-color: #2563eb;
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
+  border: 2px solid var(--primary-color);
+  background-color: transparent;
+  color: var(--primary-color);
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition: background-color 0.3s ease;
 }
 
 .report-incident-button:hover {
-  background-color: #1e40af;
-  transform: translateY(-2px);
+  background-color: var(--primary-color);
+  color: #000;
 }
 
-/* Responsive design */
-@media (max-width: 1024px) {
+/* Responsive */
+@media (max-width: 768px) {
   .summary-cards {
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  .card {
-    flex: 1 1 45%;
-    min-width: 220px;
-  }
-}
-
-@media (max-width: 640px) {
-  .dashboard {
-    padding: 1rem;
+    grid-template-columns: 1fr;
   }
 
   .dashboard-title {
-    font-size: 1.5rem;
-  }
-
-  .summary-cards {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .card {
-    flex: 1 1 100%;
+    font-size: 2rem;
   }
 
   .ip-controls input {
-    max-width: 100%;
-  }
-
-  .ip-buttons {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .ip-buttons button {
     width: 100%;
-  }
-
-  .blocked-ips table,
-  .recent-events table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-
-  .report-incident-button {
-    width: 100%;
-  }
-}
-
-@media (max-width: 400px) {
-  .dashboard-title {
-    font-size: 1.25rem;
-  }
-
-  .card h3 {
-    font-size: 0.9rem;
-  }
-
-  .card p {
-    font-size: 1.1rem;
-  }
-
-  .ip-controls h3,
-  .blocked-ips h3,
-  .report-incident-section h3,
-  .recent-events h3 {
-    font-size: 1.1rem;
-  }
-}
-
-/* === Animations === */
-@keyframes fadeInUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0px);
-    opacity: 1;
-  }
-}
-
-@keyframes fadeInDown {
-  from {
-    transform: translateY(-20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0px);
-    opacity: 1;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
+    margin-bottom: 1rem;
   }
 }
