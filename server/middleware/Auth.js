@@ -4,10 +4,32 @@ const User = require("../models/userModel");
 
 // Initialize Firebase Admin SDK (check if already initialized)
 if (!admin.apps.length) {
-    const serviceAccount = require("../config/serviceAccountKey.json");
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-    });
+    try {
+        // Try to use environment variables first (for production)
+        if (process.env.FIREBASE_PRIVATE_KEY) {
+            console.log('🔥 Initializing Firebase with environment variables');
+            admin.initializeApp({
+                credential: admin.credential.cert({
+                    projectId: process.env.FIREBASE_PROJECT_ID,
+                    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+                }),
+            });
+        } else {
+            // Fallback to service account file (for local development)
+            console.log('🔥 Initializing Firebase with service account file');
+            const serviceAccount = require("../config/serviceAccountKey.json");
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount),
+            });
+        }
+    } catch (error) {
+        console.error('❌ Firebase initialization failed:', error.message);
+        // Initialize with minimal config to prevent crashes
+        admin.initializeApp({
+            credential: admin.credential.applicationDefault(),
+        });
+    }
 }
 
 const verifyToken = async (req, res, next) => {
