@@ -25,7 +25,7 @@ const db = getFirestore(app);
 
 class AuthService {
   constructor() {
-    this.baseURL = 'http://localhost:3000';
+    this.baseURL = process.env.REACT_APP_API_URL || process.env.REACT_APP_BACKEND_URL || '';
     this.currentUser = null;
     this.idToken = null;
   }
