@@ -4,28 +4,33 @@
  * @returns {function} Express middleware function.
  */
 const authorize = (...allowedRoles) => {
-  return (req, res, next) => {
-    // req.user should have been attached by the verifyToken middleware
-    if (!req.user || !req.user.role) {
-      return res.status(403).json({ 
-        error: "Forbidden",
-        message: "User role not found. Access denied."
-      });
-    }
+    return (req, res, next) => {
+        console.log("RBAC_DEBUG: authorize middleware invoked."); // NEW LOG
+        // req.user should have been attached by the verifyToken middleware
+        if (!req.user || !req.user.role) {
+            console.log("RBAC_DEBUG: Access denied - User or role not found on request."); // NEW LOG
+            return res.status(403).json({
+                error: "Forbidden",
+                message: "User role not found. Access denied."
+            });
+        }
 
-    const userRole = req.user.role;
+        const userRole = req.user.role;
+        console.log("RBAC_DEBUG: User role from req.user:", userRole, "Allowed roles:", allowedRoles); // NEW LOG
 
-    // Check if the user's role is in the list of allowed roles
-    if (!allowedRoles.includes(userRole)) {
-      return res.status(403).json({ 
-        error: "Forbidden",
-        message: "You do not have permission to access this resource."
-      });
-    }
+        // Check if the user's role is in the list of allowed roles
+        if (!allowedRoles.includes(userRole)) {
+            console.log("RBAC_DEBUG: Access denied - User role not in allowed roles."); // NEW LOG
+            return res.status(403).json({
+                error: "Forbidden",
+                message: "You do not have permission to access this resource."
+            });
+        }
 
-    // If the role is allowed, proceed to the next middleware or controller
-    next();
-  };
+        // If the role is allowed, proceed to the next middleware or controller
+        console.log("RBAC_DEBUG: Access granted. Calling next()."); // NEW LOG
+        next();
+    };
 };
 
 module.exports = { authorize };

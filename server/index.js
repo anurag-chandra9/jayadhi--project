@@ -6,19 +6,18 @@ console.log("DEBUG-GLOBAL: Express app initialized. Request received."); // Keep
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const logger = require('./middleware/logger');
-const { firewallMiddleware } = require('./middleware/firewallMiddleware'); // Make sure this is correctly imported
+const { firewallMiddleware } = require('./middleware/firewallMiddleware'); // <-- firewallMiddleware is imported
 const cors = require('cors');
 const path = require('path');
 
-// Import Auth and RBAC middleware (keep these if apiRoutes/authRoutes/adminRoutes use them)
+// === CRITICAL FIX: Keep AuthMiddleware and authorize imports for RBAC ===
 const AuthMiddleware = require('./middleware/Auth');
-const { authorize } = require('./middleware/rbacMiddleware'); // Keep if other routes still need it
-// Note: adminRoutes import is implicitly removed if the app.use('/admin') block is gone.
+const { authorize } = require('./middleware/rbacMiddleware'); // RBAC is remaining intact, so keep this import.
 
-// Import all route modules
+// Import standard API and Auth routes
 const apiRoutes = require('./routes/api');
 const authRoutes = require('./routes/auth');
-const adminRoutes = require('./routes/admin'); // Assuming this is still here if not deleted yet
+// Note: adminRoutes import should be removed if admin.js was deleted.
 
 
 dotenv.config();
@@ -61,40 +60,18 @@ app.use(express.json({ limit: '10mb' }));
 
 // ✅ Custom middlewares (WAF should be early for comprehensive protection)
 app.use(logger);
-// === TEMPORARY CRITICAL BYPASS: Disable Firewall Middleware ===
-// app.use(firewallMiddleware); // <--- TEMPORARILY COMMENTED OUT FOR IP BLOCK BYPASS!
-console.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-console.warn("!!! FIREWALL MIDDLEWARE (WAF) IS TEMPORARILY DISABLED !!!");
-console.warn("!!! REMEMBER TO REVERT THIS AFTER UNBLOCKING YOUR IP !!!");
-console.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+app.use(firewallMiddleware); // <-- firewallMiddleware is now ACTIVE (bypass disabled)
 
 
 // ✅ Mount your standard API routes
+// These now contain the authorize middleware directly on their routes
 app.use('/api', apiRoutes);
 
 // ✅ Mount your authentication routes
 app.use('/auth', authRoutes);
 
-// ✅ Mount your admin routes with RBAC protection (if adminRoutes is still defined and used)
-// Note: This block assumes adminRoutes is still relevant and AuthMiddleware/authorize are imported.
-// If you deleted admin.js and rbacMiddleware.js, this block should be removed.
-app.use('/admin',
-    (req, res, next) => {
-        console.log("DEBUG-INDEX: Entered /admin route middleware chain.");
-        next();
-    },
-    AuthMiddleware,
-    (req, res, next) => {
-        console.log("DEBUG-INDEX: Passed AuthMiddleware. User role from req.user:", req.user ? req.user.role : 'N/A');
-        next();
-    },
-    authorize(['admin']),
-    (req, res, next) => {
-        console.log("DEBUG-INDEX: Passed authorize(['admin']) middleware. Request proceeding to adminRoutes.");
-        next();
-    },
-    adminRoutes
-);
+// Removed the app.use('/admin', ...) block here as admin routes are no longer here
+// You would also remove 'const adminRoutes = require('./routes/admin');' if admin.js was deleted.
 
 
 // ✅ Serve static files (e.g., reports)

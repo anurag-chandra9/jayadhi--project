@@ -19,14 +19,14 @@ const RiskDashboard = () => {
     const { user, loading: authLoading, userClaims } = useAuth(); // Get user, authLoading, and userClaims from AuthContext
 
     const [mainData, setMainData] = useState(null);
-    // wafData state is no longer strictly needed if no WAF info is displayed,
-    // but kept for potential admin-only summary cards if desired.
-    const [wafData, setWafData] = useState(null); 
+    const [wafData, setWafData] = useState(null); // Keep wafData state for admin WAF sections
     const [dashboardLoading, setDashboardLoading] = useState(true);
+    const [ipAddress, setIpAddress] = useState(''); // State for IP input
+    const [actionMessage, setActionMessage] = useState(''); // Message for IP actions
 
     // Determine user's role from claims, defaulting to 'user' if not present
     const userRole = userClaims?.role || 'user';
-    const isAdmin = userRole === 'admin';
+    const isAdmin = userRole === 'admin'; // Check if the role is 'admin' (lowercase)
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -41,16 +41,19 @@ const RiskDashboard = () => {
                     console.error('RISK_DASHBOARD_ERROR: Failed to fetch main dashboard data:', mainRes.status, await mainRes.text());
                 }
 
-                // If you still want SOME WAF data (e.g., total blocked IPs COUNT) in admin cards on dashboard, fetch here:
-                if (isAdmin) {
+                // Admins fetch WAF data for the dashboard
+                if (isAdmin) { // Now correctly checks the 'admin' role from userClaims
                     const wafRes = await authService.makeAuthenticatedRequest('/api/waf/dashboard');
                     if (wafRes.ok) {
-                        setWafData(await wafRes.json()); // Keep this to populate admin cards
+                        const data = await wafRes.json();
+                        setWafData(data);
+                        console.log("RISK_DASHBOARD_DEBUG: WAF data fetched successfully:", data);
                     } else {
                         console.error('RISK_DASHBOARD_ERROR: Failed to fetch WAF summary data for admin:', wafRes.status, await wafRes.text());
                     }
                 } else {
-                    setWafData(null); // Clear WAF data if not admin
+                    // If not admin, clear WAF data state
+                    setWafData(null);
                 }
 
             } catch (err) {
@@ -63,9 +66,36 @@ const RiskDashboard = () => {
         if (!authLoading && userClaims) { // Trigger fetch when auth is not loading and claims are available
             fetchDashboardData();
         }
-    }, [userClaims, authLoading, isAdmin]); // user, authLoading, isAdmin are dependencies
+    }, [userClaims, authLoading, isAdmin]); // userClaims, authLoading, isAdmin are dependencies
 
-    // Removed handleIPAction as the UI elements it controlled are being removed
+    // Re-added handleIPAction to control WAF features directly on dashboard
+    const handleIPAction = async (action) => {
+        // The backend will enforce the 'admin' role for block/unblock actions.
+        try {
+            const response = await authService.makeAuthenticatedRequest(`/api/waf/${action}-ip`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(
+                    action === 'block'
+                        ? { ipAddress, reason: 'manual block' }
+                        : { ipAddress }
+                )
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setActionMessage(`✅ ${data.message}`);
+                // Refetch WAF data to show updated blocked IPs
+                if (isAdmin) {
+                    const wafRes = await authService.makeAuthenticatedRequest('/api/waf/dashboard');
+                    if (wafRes.ok) setWafData(await wafRes.json());
+                }
+            } else {
+                setActionMessage(`❌ ${data.error || data.message}`);
+            }
+        } catch (error) {
+            setActionMessage(`❌ Failed to ${action} IP: ${error.message}`);
+        }
+    };
 
     if (dashboardLoading || authLoading) {
         return <div className="loading">Loading Risk Dashboard...</div>;
@@ -96,9 +126,79 @@ const RiskDashboard = () => {
                 ))}
             </div>
 
-            {/* === REMOVED: MANUAL IP CONTROL, BLOCKED IPS TABLE, RECENT SECURITY EVENTS === */}
-            {/* These features are now exclusively in AdminWAFManagement.jsx */}
-            {/* The previous code for this section has been removed. */}
+            {/* --- WAF Features RESTORED HERE, visible only for admins --- */}
+            {isAdmin && ( // This condition uses the correct isAdmin variable
+                <>
+                    <motion.div className="ip-controls" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+                        <h3>🚦 Manual IP Control</h3>
+                        <input
+                            type="text"
+                            placeholder="Enter IP address (e.g. 127.0.0.1)"
+                            value={ipAddress}
+                            onChange={(e) => setIpAddress(e.target.value)}
+                        />
+                        <div className="ip-buttons">
+                            <button onClick={() => handleIPAction('block')}>Block IP</button>
+                            <button onClick={() => handleIPAction('unblock')}>Unblock IP</button>
+                        </div>
+                        {actionMessage && <pre className="action-message">{actionMessage}</pre>}
+                    </motion.div>
+
+                    <motion.div className="blocked-ips" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+                        <h3>🚫 Currently Blocked IPs</h3>
+                        {wafData?.blockedIPs?.length > 0 ? (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>IP Address</th>
+                                        <th>Blocked On</th>
+                                        <th>Blocked By</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {wafData.blockedIPs.map((ipObj, index) => (
+                                        <tr key={ipObj.ipAddress || index}>
+                                            <td>{ipObj.ipAddress}</td>
+                                            <td>{ipObj.blockedAt ? new Date(ipObj.blockedAt).toLocaleString() : 'N/A'}</td>
+                                            <td>{ipObj.blockedBy || 'System'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <p>No currently blocked IPs</p>
+                        )}
+                    </motion.div>
+
+                    <motion.div className="recent-events" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+                        <h3>🛡️ Recent Security Events</h3>
+                        {wafData?.events?.length > 0 ? (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Event Type</th>
+                                        <th>Source IP</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {wafData.events.map((event, index) => (
+                                        <tr key={event._id || index}>
+                                            <td>{new Date(event.timestamp).toLocaleString()}</td>
+                                            <td>{event.eventType}</td>
+                                            <td>{event.ipAddress}</td>
+                                            <td>{event.details}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <p>No recent security events.</p>
+                        )}
+                    </motion.div>
+                </>
+            )}
 
             <motion.div className="report-incident-section" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
                 <h3>📝 Incident Reporting</h3>
