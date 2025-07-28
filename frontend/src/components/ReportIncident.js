@@ -225,7 +225,7 @@ const ReportIncident = () => {
               <p><strong>Generated:</strong> {new Date(status.timestamp).toLocaleString()}</p>
               {status.emailSent && <p><strong>Email Status:</strong> <MailCheck size={14} /> Sent</p>}
               <p className="download-link">
-                <a href={`${process.env.REACT_APP_API_URL || ''}/reports/${status.reportFileName}`} target="_blank" rel="noreferrer" className="pdf-link">
+                <a href={`${process.env.NODE_ENV === 'production' ? (process.env.REACT_APP_API_URL || 'https://jayadhi-project-1-fafl.onrender.com') : (process.env.REACT_APP_API_URL || 'http://localhost:3000')}/reports/${status.reportFileName}`} target="_blank" rel="noreferrer" className="pdf-link">
                   <Download size={16} style={{ marginRight: '6px' }} />Download PDF Report
                 </a>
               </p>
