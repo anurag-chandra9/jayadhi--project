@@ -27,6 +27,7 @@ const SubscriptionForm = () => {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [successDetails, setSuccessDetails] = useState(null);
   const [userId, setUserId] = useState('');
+  const [animate, setAnimate] = useState(false);
 
   useEffect(() => {
     if (!window.Razorpay) {
@@ -35,6 +36,7 @@ const SubscriptionForm = () => {
       script.async = true;
       document.body.appendChild(script);
     }
+    setTimeout(() => setAnimate(true), 50);
   }, []);
 
   useEffect(() => {
@@ -108,7 +110,7 @@ const SubscriptionForm = () => {
               setPaymentError('Payment verification failed');
             }
           },
-          theme: { color: '#4F46E5' },
+          theme: { color: '#6366f1' },
         };
 
         const rzp = new window.Razorpay(options);
@@ -124,14 +126,37 @@ const SubscriptionForm = () => {
   };
 
   return (
-    <div style={{ padding: '40px', fontFamily: 'Segoe UI, sans-serif', background: '#f9fafb', minHeight: '100vh' }}>
-      <h2 style={{ textAlign: 'center', fontSize: '32px', fontWeight: 'bold', marginBottom: '16px' }}>Choose Your Security Plan</h2>
-      <p style={{ textAlign: 'center', color: '#6b7280', marginBottom: '40px' }}>
-        Comprehensive web application security solutions for businesses of all sizes. Protect your digital assets with our advanced threat detection and monitoring.
+    <div
+      style={{
+        backgroundColor: '#181818',
+        color: '#fff',
+        minHeight: '100vh',
+        padding: '40px 20px',
+        fontFamily: 'Segoe UI, sans-serif',
+        opacity: animate ? 1 : 0,
+        transform: animate ? 'translateY(0)' : 'translateY(30px)',
+        transition: 'opacity 0.8s ease, transform 0.8s ease',
+      }}
+    >
+      <h2 style={{ textAlign: 'center', fontSize: '32px', fontWeight: '700' }}>Choose Your Security Plan</h2>
+      <p style={{ textAlign: 'center', fontSize: '16px', marginBottom: '40px', color: '#d1d5db' }}>
+        Comprehensive web application security solutions for businesses of all sizes.
       </p>
 
       {paymentSuccess && successDetails && (
-        <div style={{ color: 'green', textAlign: 'center', marginBottom: '24px' }}>
+        <div
+          style={{
+            backgroundColor: '#1f9d55',
+            color: '#fff',
+            textAlign: 'center',
+            marginBottom: '24px',
+            padding: 16,
+            borderRadius: 8,
+            transform: animate ? 'translateY(0)' : 'translateY(-20px)',
+            opacity: animate ? 1 : 0,
+            transition: 'all 0.5s ease',
+          }}
+        >
           <h3>✅ Payment Successful!</h3>
           <p><b>Plan:</b> {successDetails.plan}</p>
           <p><b>Amount:</b> ₹{successDetails.amount}</p>
@@ -141,29 +166,72 @@ const SubscriptionForm = () => {
       )}
 
       {paymentError && (
-        <div style={{ color: 'red', textAlign: 'center', marginBottom: '24px' }}>
+        <div
+          style={{
+            backgroundColor: '#dc2626',
+            color: '#fff',
+            textAlign: 'center',
+            marginBottom: '24px',
+            padding: 16,
+            borderRadius: 8,
+            transform: animate ? 'translateY(0)' : 'translateY(-20px)',
+            opacity: animate ? 1 : 0,
+            transition: 'all 0.5s ease',
+          }}
+        >
           {paymentError}
         </div>
       )}
 
       <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '24px' }}>
-        {PLANS.map((plan) => (
-          <div key={plan.name} style={{
-            border: '1px solid #e5e7eb',
-            borderRadius: 16,
-            padding: 28,
-            width: 280,
-            backgroundColor: '#fff',
-            boxShadow: '0 8px 16px rgba(0,0,0,0.06)',
-            textAlign: 'center',
-            transition: 'transform 0.3s',
-          }}>
-            <h3 style={{ fontSize: '22px', fontWeight: '600' }}>{plan.name}</h3>
-            <p style={{ fontSize: 16, color: '#6b7280', margin: '8px 0' }}>{plan.description}</p>
-            <h2 style={{ margin: '16px 0', fontSize: 28, fontWeight: '700' }}>
-              ₹{plan.amount} <span style={{ fontSize: 14, color: '#6b7280' }}>/month</span>
+        {PLANS.map((plan, index) => (
+          <div
+            key={plan.name}
+            style={{
+              border: '1px solid #ffffff',
+              borderRadius: 12,
+              padding: 28,
+              width: 300,
+              backgroundColor: index === 1 ? '#1E3A8A' : '#111827',
+              textAlign: 'center',
+              position: 'relative',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)',
+              transform: animate ? 'scale(1)' : 'scale(0.9)',
+              opacity: animate ? 1 : 0,
+              transition: `all 0.5s ease ${index * 0.2}s`,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 255, 255, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)';
+            }}
+          >
+            {index === 1 && (
+              <div style={{
+                position: 'absolute',
+                top: animate ? '-14px' : '-40px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                backgroundColor: '#f59e0b',
+                color: '#000',
+                fontSize: '12px',
+                padding: '4px 10px',
+                borderRadius: '999px',
+                fontWeight: '600',
+                transition: 'top 0.6s ease',
+              }}>
+                Most Popular
+              </div>
+            )}
+            <h3 style={{ fontSize: '20px', fontWeight: '600' }}>{plan.name}</h3>
+            <p style={{ fontSize: 14, marginBottom: 12, color: '#e5e7eb' }}>{plan.description}</p>
+            <h2 style={{ margin: '16px 0', fontSize: 24, fontWeight: '700' }}>
+              ₹{plan.amount} <span style={{ fontSize: 14, color: '#e5e7eb' }}>/month</span>
             </h2>
-            <ul style={{ textAlign: 'left', marginTop: 16, paddingLeft: 20, color: '#374151', fontSize: 14 }}>
+            <ul style={{ textAlign: 'left', marginTop: 16, paddingLeft: 20, color: '#e5e7eb', fontSize: 14 }}>
               {plan.features.map((f, idx) => (
                 <li key={idx}>✔ {f}</li>
               ))}
@@ -174,13 +242,23 @@ const SubscriptionForm = () => {
               style={{
                 marginTop: 20,
                 padding: '12px 24px',
-                backgroundColor: '#4F46E5',
+                backgroundColor: '#3B82F6',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 8,
                 cursor: 'pointer',
                 fontWeight: '600',
                 width: '100%',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 0 0 transparent',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#2563eb';
+                e.currentTarget.style.boxShadow = '0 0 10px #3B82F6';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#3B82F6';
+                e.currentTarget.style.boxShadow = '0 0 0 transparent';
               }}
             >
               {loadingPlan === plan.name ? 'Processing...' : `Choose ${plan.name}`}
@@ -188,6 +266,10 @@ const SubscriptionForm = () => {
           </div>
         ))}
       </div>
+
+      <p style={{ textAlign: 'center', fontSize: '14px', color: '#e5e7eb', marginTop: '40px' }}>
+        ✅ 24/7 Security Monitoring &nbsp;&nbsp;&nbsp; ✅ Real-time Threat Detection &nbsp;&nbsp;&nbsp; ✅ Automated Response
+      </p>
     </div>
   );
 };
