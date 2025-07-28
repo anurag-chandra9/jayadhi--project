@@ -1,0 +1,79 @@
+.compliance-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.compliance-container h2 {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.compliance-container p {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #666;
+}
+
+.compliance-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+}
+
+.compliance-table th,
+.compliance-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.compliance-table th {
+  background-color: #f2f2f2;
+  font-weight: 600;
+  color: #333;
+}
+
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 12px;
+  font-size: 0.85em;
+  font-weight: 500;
+  text-transform: capitalize;
+  color: #fff;
+}
+
+.status-compliant {
+  background-color: #28a745; /* Green */
+}
+
+.status-non-compliant {
+  background-color: #dc3545; /* Red */
+}
+
+.status-in-progress {
+  background-color: #ffc107; /* Yellow */
+  color: #333;
+}
+
+.status-select {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.loading, .error-message {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+}
+
+.error-message {
+  color: #dc3545;
+}
