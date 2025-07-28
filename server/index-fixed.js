@@ -12,6 +12,7 @@ const AuthMiddleware = require('./middleware/Auth');
 const { authorize } = require('./middleware/rbacMiddleware');
 const apiRoutes = require('./routes/api');
 const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
 
 dotenv.config();
 connectDB();
@@ -31,11 +32,11 @@ if (process.env.ALLOWED_ORIGINS) {
 } else if (process.env.NODE_ENV === 'production') {
   // Production - Render automatically sets RENDER_EXTERNAL_URL
   const renderUrl = process.env.RENDER_EXTERNAL_URL;
-  allowedOrigins = renderUrl ? [renderUrl] : ['https://jayadhi-project-1-fafl.onrender.com'];
+  allowedOrigins = renderUrl ? [renderUrl] : ['https://jayadhi-project-hyrv.onrender.com'];
   
   // Always include your specific Render URL
-  if (!allowedOrigins.includes('https://jayadhi-project-1-fafl.onrender.com')) {
-    allowedOrigins.push('https://jayadhi-project-1-fafl.onrender.com');
+  if (!allowedOrigins.includes('https://jayadhi-project-hyrv.onrender.com')) {
+    allowedOrigins.push('https://jayadhi-project-hyrv.onrender.com');
   }
 } else {
   // Development fallback
@@ -112,6 +113,7 @@ app.use('/auth', authRoutes);
 app.use('/admin',
     AuthMiddleware,
     authorize(['admin']),
+    adminRoutes
 );
 
 // Serve static files (reports)

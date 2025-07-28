@@ -17,7 +17,7 @@ const Signup = () => {
 
   try {
     const apiUrl = process.env.NODE_ENV === 'production' 
-      ? (process.env.REACT_APP_API_URL || 'https://jayadhi-project-1-fafl.onrender.com')
+      ? (process.env.REACT_APP_API_URL || 'https://jayadhi-project-hyrv.onrender.com')
       : (process.env.REACT_APP_API_URL || 'http://localhost:3000');
     
     const response = await fetch(`${apiUrl}/auth/signup`, {

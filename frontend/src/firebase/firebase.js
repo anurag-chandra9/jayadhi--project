@@ -27,7 +27,7 @@ class AuthService {
   constructor() {
     // Dynamic API URL based on environment
     if (process.env.NODE_ENV === 'production') {
-      this.baseURL = process.env.REACT_APP_API_URL || 'https://jayadhi-project-1-fafl.onrender.com';
+      this.baseURL = process.env.REACT_APP_API_URL || 'https://jayadhi-project-hyrv.onrender.com';
     } else {
       this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
     }
