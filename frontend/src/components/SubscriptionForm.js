@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 const PLANS = [
   {
@@ -22,11 +23,11 @@ const PLANS = [
 ];
 
 const SubscriptionForm = () => {
+  const { user, isLoggedIn } = useAuth();
   const [loadingPlan, setLoadingPlan] = useState('');
   const [paymentError, setPaymentError] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [successDetails, setSuccessDetails] = useState(null);
-  const [userId, setUserId] = useState('');
   const [animate, setAnimate] = useState(false);
 
   useEffect(() => {
@@ -39,32 +40,59 @@ const SubscriptionForm = () => {
     setTimeout(() => setAnimate(true), 50);
   }, []);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        setUserId(payload.sub || payload._id || payload.id || '');
-      } catch {
-        setUserId('');
-      }
-    }
-  }, []);
-
   const handlePayment = async (plan) => {
     setLoadingPlan(plan.name);
     setPaymentError('');
     setPaymentSuccess(false);
     setSuccessDetails(null);
 
+    // Debug authentication state
+    console.log('🔍 Auth State Check:', { 
+      isLoggedIn, 
+      user: !!user, 
+      userUid: user?.uid
+    });
+
+    // Validate user authentication - check Firebase auth state
+    if (!isLoggedIn || !user || !user.uid) {
+      setPaymentError('Authentication required. Please log in first.');
+      setLoadingPlan('');
+      return;
+    }
+
+    // Validate Razorpay key
+    const razorpayKey = process.env.REACT_APP_RAZORPAY_KEY_ID;
+    if (!razorpayKey) {
+      setPaymentError('Payment configuration error. Please contact support.');
+      setLoadingPlan('');
+      return;
+    }
+
     try {
-      const res = await fetch('/api/subscription/create-order', {
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? (process.env.REACT_APP_API_URL || 'https://jayadhi-project-hyrv.onrender.com')
+        : (process.env.REACT_APP_API_URL || 'http://localhost:3000');
+      
+      // Get Firebase ID token instead of localStorage token
+      const token = await user.getIdToken();
+      console.log('🔑 Firebase token obtained:', !!token);
+      
+      if (!token) {
+        setPaymentError('Authentication required. Please log in first.');
+        setLoadingPlan('');
+        return;
+      }
+
+      const res = await fetch(`${apiUrl}/api/subscription/create-order`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           amount: plan.amount,
           plan: plan.name,
-          userId,
+          userId: user.uid,
           receipt: `receipt_${plan.name}_${Date.now()}`,
         }),
       });
@@ -83,9 +111,14 @@ const SubscriptionForm = () => {
           order_id: data.orderId,
           handler: async function (response) {
             try {
-              const verifyRes = await fetch('/api/subscription/verify-payment', {
+              // Get fresh Firebase token for verification
+              const verifyToken = await user.getIdToken();
+              const verifyRes = await fetch(`${apiUrl}/api/subscription/verify-payment`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${verifyToken}`
+                },
                 body: JSON.stringify({
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_order_id: response.razorpay_order_id,
