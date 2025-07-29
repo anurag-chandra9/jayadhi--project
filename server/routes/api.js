@@ -9,14 +9,13 @@ const wafController = require('../controllers/wafController');
 const assetController = require('../controllers/assetController');
 const incidentReportController = require('../controllers/incidentReportController');
 const subscriptionRoutes = require('./Subscription');
-router.use('/subscription', subscriptionRoutes);
 
 // Middleware
 const Auth = require('../middleware/Auth');
 const { authorize } = require('../middleware/rbacMiddleware'); // Keep authorize as RBAC remains intact
 
-// Removed the router.use debug log here
-
+// ======== SUBSCRIPTION ROUTES ========
+router.use('/subscription', Auth, authorize(...['user', 'admin']), subscriptionRoutes);
 
 // ======== THREAT INGESTION ========
 router.post('/threats/report', Auth, authorize(...['user', 'admin']), threatController.reportThreat);

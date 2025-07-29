@@ -44,10 +44,17 @@ const SubscriptionForm = () => {
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        setUserId(payload.sub || payload._id || payload.id || '');
-      } catch {
+        // Try multiple possible user ID fields from Firebase/JWT
+        const extractedUserId = payload.uid || payload.sub || payload.user_id || payload._id || payload.id || '';
+        console.log('🔍 Extracted User ID:', extractedUserId);
+        setUserId(extractedUserId);
+      } catch (error) {
+        console.error('❌ Error extracting user ID from token:', error);
         setUserId('');
       }
+    } else {
+      console.warn('⚠️ No authentication token found');
+      setPaymentError('Please log in to access subscription plans');
     }
   }, []);
 
@@ -57,10 +64,39 @@ const SubscriptionForm = () => {
     setPaymentSuccess(false);
     setSuccessDetails(null);
 
+    // Validate user authentication
+    if (!userId) {
+      setPaymentError('Please log in to purchase a subscription');
+      setLoadingPlan('');
+      return;
+    }
+
+    // Validate Razorpay key
+    const razorpayKey = process.env.REACT_APP_RAZORPAY_KEY_ID;
+    if (!razorpayKey) {
+      setPaymentError('Payment configuration error. Please contact support.');
+      setLoadingPlan('');
+      return;
+    }
+
     try {
-      const res = await fetch('/api/subscription/create-order', {
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? (process.env.REACT_APP_API_URL || 'https://jayadhi-project-hyrv.onrender.com')
+        : (process.env.REACT_APP_API_URL || 'http://localhost:3000');
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setPaymentError('Authentication required. Please log in first.');
+        setLoadingPlan('');
+        return;
+      }
+      
+      const res = await fetch(`${apiUrl}/api/subscription/create-order`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           amount: plan.amount,
           plan: plan.name,
@@ -83,9 +119,12 @@ const SubscriptionForm = () => {
           order_id: data.orderId,
           handler: async function (response) {
             try {
-              const verifyRes = await fetch('/api/subscription/verify-payment', {
+              const verifyRes = await fetch(`${apiUrl}/api/subscription/verify-payment`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_order_id: response.razorpay_order_id,
