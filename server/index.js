@@ -28,7 +28,12 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', true);
 
 // CORS Configuration for Production and Development
-let allowedOrigins = [];
+let allowedOrigins = ['http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:5173',
+    'http://client1.local:3001',
+    'http://client2.local:3002',
+    'http://admin3.local:3003'];
 
 if (process.env.ALLOWED_ORIGINS) {
   allowedOrigins = process.env.ALLOWED_ORIGINS.split(',').map(origin =>

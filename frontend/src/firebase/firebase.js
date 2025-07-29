@@ -25,7 +25,13 @@ const db = getFirestore(app);
 
 class AuthService {
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || process.env.REACT_APP_BACKEND_URL || '';
+    // Dynamic API URL based on environment
+    if (process.env.NODE_ENV === 'production') {
+      this.baseURL = process.env.REACT_APP_API_URL || 'https://jayadhi-project-hyrv.onrender.com';
+    } else {
+      this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+    }
+    console.log('🔗 AuthService baseURL:', this.baseURL);
     this.currentUser = null;
     this.idToken = null;
   }
