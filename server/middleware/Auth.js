@@ -103,15 +103,31 @@ const verifyToken = async (req, res, next) => {
             console.log("AUTH_MIDDLEWARE_DEBUG: Role from claims:", roleFromClaims); // NEW LOG
 
             console.log("AUTH_MIDDLEWARE_DEBUG: Attempting to find user in MongoDB with firebaseUid:", decodedToken.uid); // NEW LOG
-            const user = await User.findOne({ firebaseUid: decodedToken.uid });
+            let user = await User.findOne({ firebaseUid: decodedToken.uid });
             console.log("AUTH_MIDDLEWARE_DEBUG: MongoDB user find result:", user ? user.email : 'Not Found'); // NEW LOG
 
             if (!user) {
-                console.log("AUTH_MIDDLEWARE_DEBUG: User not found in MongoDB."); // NEW LOG
-                return res.status(404).json({
-                    error: "User not found",
-                    message: "User not found in local database. Please complete registration."
-                });
+                console.log("AUTH_MIDDLEWARE_DEBUG: User not found in MongoDB. Auto-creating user..."); // NEW LOG
+                
+                // Auto-create user in MongoDB if they exist in Firebase but not in our database
+                try {
+                    user = new User({
+                        username: decodedToken.name || decodedToken.email?.split('@')[0] || 'user',
+                        email: decodedToken.email,
+                        firebaseUid: decodedToken.uid,
+                        role: roleFromClaims,
+                        createdAt: new Date(),
+                        lastLogin: new Date()
+                    });
+                    await user.save();
+                    console.log("AUTH_MIDDLEWARE_DEBUG: User auto-created in MongoDB:", user.email); // NEW LOG
+                } catch (createError) {
+                    console.error("AUTH_MIDDLEWARE_ERROR: Failed to auto-create user:", createError); // NEW LOG
+                    return res.status(500).json({
+                        error: "User creation failed",
+                        message: "Failed to create user record. Please contact support."
+                    });
+                }
             }
 
             if (user.role !== roleFromClaims) {

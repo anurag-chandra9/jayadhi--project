@@ -85,9 +85,12 @@ const SubscriptionForm = () => {
 
       const res = await fetch(`${apiUrl}/api/subscription/create-order`, {
         method: 'POST',
+        mode: 'cors',
+        credentials: 'include',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Origin': window.location.origin
         },
         body: JSON.stringify({
           amount: plan.amount,
@@ -115,9 +118,12 @@ const SubscriptionForm = () => {
               const verifyToken = await user.getIdToken();
               const verifyRes = await fetch(`${apiUrl}/api/subscription/verify-payment`, {
                 method: 'POST',
+                mode: 'cors',
+                credentials: 'include',
                 headers: { 
                   'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${verifyToken}`
+                  'Authorization': `Bearer ${verifyToken}`,
+                  'Origin': window.location.origin
                 },
                 body: JSON.stringify({
                   razorpay_payment_id: response.razorpay_payment_id,
