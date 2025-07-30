@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import './RiskDashboard.css';
-import { authService } from '../firebase/firebase';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // Ensure useAuth is imported
+import { useAuth } from '../context/AuthContext'; // 1. We only need the useAuth hook
 
 const cardVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -16,8 +15,7 @@ const cardVariants = {
 
 const RiskDashboard = () => {
     const navigate = useNavigate();
-    // FIX: Get user, authLoading, and userClaims from AuthContext
-    const { user, loading: authLoading, userClaims } = useAuth();
+    const { user, loading: authLoading } = useAuth(); // 2. Get the user object from our context
 
     const [mainData, setMainData] = useState(null);
     const [wafData, setWafData] = useState(null);
@@ -25,58 +23,58 @@ const RiskDashboard = () => {
     const [ipAddress, setIpAddress] = useState('');
     const [actionMessage, setActionMessage] = useState('');
 
-    // FIX: Determine isAdmin based on userClaims.role
-    const userRole = userClaims?.role || 'user'; // Use userClaims directly here
-    const isAdmin = userRole === 'admin'; // Check if the role is 'admin' (lowercase)
+    // 3. Determine if the user is an admin directly from the user object (CASE-INSENSITIVE FIX)
+    const isAdmin = user?.role?.toLowerCase() === 'admin';
 
     useEffect(() => {
         const fetchDashboardData = async () => {
+            // Don't fetch if there's no user or token
+            if (!user || !user.token) {
+                setDashboardLoading(false);
+                return;
+            }
+
             setDashboardLoading(true);
             try {
-                // Everyone gets the main dashboard data
-                const mainRes = await authService.makeAuthenticatedRequest('/api/dashboard');
+                // 4. Use standard fetch with the correct token from the user object
+                const mainRes = await fetch('/api/dashboard', {
+                    headers: { 'Authorization': `Bearer ${user.token}` }
+                });
+
                 if (mainRes.ok) {
-                    const data = await mainRes.json();
-                    setMainData(data);
-                } else {
-                    console.error('RISK_DASHBOARD_ERROR: Failed to fetch main dashboard data:', mainRes.status, await mainRes.text());
+                    setMainData(await mainRes.json());
                 }
 
-                // Admins fetch WAF data for the dashboard
-                if (isAdmin) { // Now correctly checks the 'admin' role from userClaims
-                    const wafRes = await authService.makeAuthenticatedRequest('/api/waf/dashboard');
+                // Admins fetch WAF data
+                if (isAdmin) {
+                    const wafRes = await fetch('/api/waf/dashboard', {
+                        headers: { 'Authorization': `Bearer ${user.token}` }
+                    });
                     if (wafRes.ok) {
-                        const data = await wafRes.json();
-                        setWafData(data);
-                        console.log("RISK_DASHBOARD_DEBUG: WAF data fetched successfully:", data);
-                    } else {
-                        console.error('RISK_DASHBOARD_ERROR: Failed to fetch WAF summary data for admin:', wafRes.status, await wafRes.text());
+                        setWafData(await wafRes.json());
                     }
-                } else {
-                    // If not admin, clear WAF data state
-                    setWafData(null);
                 }
-
             } catch (err) {
-                console.error('RISK_DASHBOARD_ERROR: Error fetching dashboard data:', err);
+                console.error('Error fetching dashboard data:', err);
             } finally {
                 setDashboardLoading(false);
             }
         };
 
-        // Only fetch data if we have a logged-in user and auth state is not loading
-        if (!authLoading && userClaims) { // Trigger fetch when auth is not loading and claims are available
+        // Only fetch data when the auth state is no longer loading
+        if (!authLoading) {
             fetchDashboardData();
         }
-    }, [userClaims, authLoading, isAdmin]); // userClaims, authLoading, isAdmin are dependencies
+    }, [user, authLoading, isAdmin]); // Dependencies for the effect
 
-    // handleIPAction to control WAF features directly on dashboard
     const handleIPAction = async (action) => {
-        // The backend will enforce the 'admin' role for block/unblock actions.
         try {
-            const response = await authService.makeAuthenticatedRequest(`/api/waf/${action}-ip`, {
+            const response = await fetch(`/api/waf/${action}-ip`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}` // Use the correct token
+                },
                 body: JSON.stringify(
                     action === 'block'
                         ? { ipAddress, reason: 'manual block' }
@@ -86,9 +84,9 @@ const RiskDashboard = () => {
             const data = await response.json();
             if (response.ok) {
                 setActionMessage(`✅ ${data.message}`);
-                // Refetch WAF data to show updated blocked IPs
+                // Refetch WAF data
                 if (isAdmin) {
-                    const wafRes = await authService.makeAuthenticatedRequest('/api/waf/dashboard');
+                    const wafRes = await fetch('/api/waf/dashboard', { headers: { 'Authorization': `Bearer ${user.token}` } });
                     if (wafRes.ok) setWafData(await wafRes.json());
                 }
             } else {
@@ -108,17 +106,15 @@ const RiskDashboard = () => {
         { title: 'High Severity Threats', value: mainData?.highSeverityThreats ?? 'N/A' },
         { title: 'Compliance Score', value: `${mainData?.complianceScore ?? 0}%` },
         { title: 'Overall Risk', value: mainData?.overallRiskLevel ?? 'N/A' },
-        // Conditionally show admin cards if desired (e.g., summary of WAF data)
         ...(isAdmin ? [
-            { title: 'Total Blocked IPs (All)', value: wafData?.blockedIPs?.length ?? 0 }, // Using length of blockedIPs array
-            { title: 'WAF Critical Events (24h)', value: wafData?.stats?.criticalEvents ?? 0 }, // Assuming stats object
-            { title: 'Events Last 24h', value: wafData?.stats?.securityEvents24h ?? 0 }, // Assuming stats object
+            { title: 'Total Blocked IPs', value: wafData?.stats?.totalBlockedIPs ?? 0 },
+            { title: 'Critical Events (24h)', value: wafData?.stats?.criticalEvents ?? 0 },
         ] : [])
     ];
 
     return (
-        <motion.div className="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-            <motion.h2 className="dashboard-title" initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>📊 Risk Analysis Dashboard</motion.h2>
+        <motion.div className="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.h2 className="dashboard-title">📊 Risk Analysis Dashboard</motion.h2>
 
             <div className="summary-cards">
                 {cardData.map((item, i) => (
@@ -129,14 +125,13 @@ const RiskDashboard = () => {
                 ))}
             </div>
 
-            {/* --- WAF Features RESTORED HERE, visible only for admins --- */}
-            {isAdmin && ( // This condition uses the correct isAdmin variable
+            {isAdmin && (
                 <>
-                    <motion.div className="ip-controls" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+                    <motion.div className="ip-controls" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
                         <h3>🚦 Manual IP Control</h3>
                         <input
                             type="text"
-                            placeholder="Enter IP address (e.g. 127.0.0.1)"
+                            placeholder="Enter IP address"
                             value={ipAddress}
                             onChange={(e) => setIpAddress(e.target.value)}
                         />
@@ -147,23 +142,23 @@ const RiskDashboard = () => {
                         {actionMessage && <pre className="action-message">{actionMessage}</pre>}
                     </motion.div>
 
-                    <motion.div className="blocked-ips" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+                    <motion.div className="blocked-ips" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
                         <h3>🚫 Currently Blocked IPs</h3>
                         {wafData?.blockedIPs?.length > 0 ? (
                             <table>
                                 <thead>
                                     <tr>
                                         <th>IP Address</th>
-                                        <th>Blocked On</th>
-                                        <th>Blocked By</th>
+                                        <th>Reason</th>
+                                        <th>Blocked At</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {wafData.blockedIPs.map((ipObj, index) => (
-                                        <tr key={ipObj.ipAddress || index}>
-                                            <td>{ipObj.ipAddress}</td>
-                                            <td>{ipObj.blockedAt ? new Date(ipObj.blockedAt).toLocaleString() : 'N/A'}</td>
-                                            <td>{ipObj.blockedBy || 'System'}</td>
+                                    {wafData.blockedIPs.map((ip) => (
+                                        <tr key={ip._id}>
+                                            <td>{ip.ipAddress}</td>
+                                            <td>{ip.reason}</td>
+                                            <td>{new Date(ip.blockedAt).toLocaleString()}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -172,47 +167,16 @@ const RiskDashboard = () => {
                             <p>No currently blocked IPs</p>
                         )}
                     </motion.div>
-
-                    <motion.div className="recent-events" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-                        <h3>🛡️ Recent Security Events</h3>
-                        {wafData?.events?.length > 0 ? (
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Timestamp</th>
-                                        <th>Event Type</th>
-                                        <th>Source IP</th>
-                                        <th>Details</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {wafData.events.map((event, index) => (
-                                        <tr key={event._id || index}>
-                                            <td>{new Date(event.timestamp).toLocaleString()}</td>
-                                            <td>{event.eventType}</td>
-                                            <td>{event.ipAddress}</td>
-                                            <td>{event.details}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        ) : (
-                            <p>No recent security events.</p>
-                        )}
-                    </motion.div>
                 </>
             )}
 
-            <motion.div className="report-incident-section" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+            <motion.div className="report-incident-section" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}>
                 <h3>📝 Incident Reporting</h3>
-                <p className="report-subtext">
-                    Report a new cybersecurity incident for documentation and insurance processing.
-                </p>
+                <p className="report-subtext">Report a new cybersecurity incident.</p>
                 <button onClick={() => navigate('/report-incident')} className="report-incident-button">
                     ➕ Create New Incident Report
                 </button>
             </motion.div>
-
         </motion.div>
     );
 };

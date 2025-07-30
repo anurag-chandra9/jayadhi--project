@@ -4,6 +4,12 @@ const User = require('../models/userModel');
 const protect = async (req, res, next) => {
   let token;
 
+  // Check for the JWT_SECRET at the start of the function
+  if (!process.env.JWT_SECRET) {
+    console.error('FATAL ERROR: JWT_SECRET is not defined in .env file.');
+    return res.status(500).json({ message: 'Server configuration error: Missing JWT secret.' });
+  }
+
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
@@ -25,8 +31,9 @@ const protect = async (req, res, next) => {
 
       next();
     } catch (error) {
-      console.error('Token verification failed:', error);
-      return res.status(401).json({ message: 'Not authorized, token failed' });
+      console.error('Token verification failed:', error.message);
+      // Provide a more specific error message back to the frontend
+      return res.status(401).json({ message: `Not authorized, token failed: ${error.message}` });
     }
   }
 
