@@ -44,10 +44,31 @@ const SubscriptionForm = () => {
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        setUserId(payload.sub || payload._id || payload.id || '');
-      } catch {
+        const uid = payload.user_id || payload.sub || payload._id || payload.id;
+        if (!uid) throw new Error("No UID found in token");
+        setUserId(uid);
+
+        // ✅ Check if already subscribed
+        fetch(`/api/subscription/status?userId=${uid}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.subscribed && data.subscription) {
+              setPaymentSuccess(true);
+              setSuccessDetails({
+                razorpay_payment_id: data.subscription.razorpay_payment_id,
+                razorpay_order_id: data.subscription.razorpay_order_id,
+                plan: data.subscription.plan,
+                amount: data.subscription.amount,
+              });
+            }
+          });
+      } catch (err) {
+        console.error('Token decoding failed:', err);
         setUserId('');
       }
+    } else {
+      console.warn('Token not found');
+      setUserId('');
     }
   }, []);
 
@@ -97,12 +118,28 @@ const SubscriptionForm = () => {
               const verifyData = await verifyRes.json();
               if (verifyRes.ok && verifyData.success) {
                 setPaymentSuccess(true);
-                setSuccessDetails({
+                const subscriptionInfo = {
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_order_id: response.razorpay_order_id,
                   plan: plan.name,
                   amount: plan.amount,
+                };
+                setSuccessDetails(subscriptionInfo);
+
+                // ✅ Save subscription
+                await fetch('/api/subscription/save', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    userId,
+                    plan: plan.name,
+                    amount: plan.amount,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_order_id: response.razorpay_order_id,
+                    subscribedAt: new Date().toISOString(),
+                  }),
                 });
+
               } else {
                 setPaymentError(verifyData.error || 'Payment verification failed');
               }
@@ -144,19 +181,17 @@ const SubscriptionForm = () => {
       </p>
 
       {paymentSuccess && successDetails && (
-        <div
-          style={{
-            backgroundColor: '#1f9d55',
-            color: '#fff',
-            textAlign: 'center',
-            marginBottom: '24px',
-            padding: 16,
-            borderRadius: 8,
-            transform: animate ? 'translateY(0)' : 'translateY(-20px)',
-            opacity: animate ? 1 : 0,
-            transition: 'all 0.5s ease',
-          }}
-        >
+        <div style={{
+          backgroundColor: '#1f9d55',
+          color: '#fff',
+          textAlign: 'center',
+          marginBottom: '24px',
+          padding: 16,
+          borderRadius: 8,
+          transform: animate ? 'translateY(0)' : 'translateY(-20px)',
+          opacity: animate ? 1 : 0,
+          transition: 'all 0.5s ease',
+        }}>
           <h3>✅ Payment Successful!</h3>
           <p><b>Plan:</b> {successDetails.plan}</p>
           <p><b>Amount:</b> ₹{successDetails.amount}</p>
@@ -166,40 +201,36 @@ const SubscriptionForm = () => {
       )}
 
       {paymentError && (
-        <div
-          style={{
-            backgroundColor: '#dc2626',
-            color: '#fff',
-            textAlign: 'center',
-            marginBottom: '24px',
-            padding: 16,
-            borderRadius: 8,
-            transform: animate ? 'translateY(0)' : 'translateY(-20px)',
-            opacity: animate ? 1 : 0,
-            transition: 'all 0.5s ease',
-          }}
-        >
+        <div style={{
+          backgroundColor: '#dc2626',
+          color: '#fff',
+          textAlign: 'center',
+          marginBottom: '24px',
+          padding: 16,
+          borderRadius: 8,
+          transform: animate ? 'translateY(0)' : 'translateY(-20px)',
+          opacity: animate ? 1 : 0,
+          transition: 'all 0.5s ease',
+        }}>
           {paymentError}
         </div>
       )}
 
       <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '24px' }}>
         {PLANS.map((plan, index) => (
-          <div
-            key={plan.name}
-            style={{
-              border: '1px solid #ffffff',
-              borderRadius: 12,
-              padding: 28,
-              width: 300,
-              backgroundColor: index === 1 ? '#1E3A8A' : '#111827',
-              textAlign: 'center',
-              position: 'relative',
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)',
-              transform: animate ? 'scale(1)' : 'scale(0.9)',
-              opacity: animate ? 1 : 0,
-              transition: `all 0.5s ease ${index * 0.2}s`,
-            }}
+          <div key={plan.name} style={{
+            border: '1px solid #ffffff',
+            borderRadius: 12,
+            padding: 28,
+            width: 300,
+            backgroundColor: index === 1 ? '#1E3A8A' : '#111827',
+            textAlign: 'center',
+            position: 'relative',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)',
+            transform: animate ? 'scale(1)' : 'scale(0.9)',
+            opacity: animate ? 1 : 0,
+            transition: `all 0.5s ease ${index * 0.2}s`,
+          }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'scale(1.05)';
               e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 255, 255, 0.2)';

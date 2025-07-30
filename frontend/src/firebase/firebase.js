@@ -31,6 +31,7 @@ class AuthService {
     } else {
       this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
     }
+
     console.log('🔗 AuthService baseURL:', this.baseURL);
     this.currentUser = null;
     this.idToken = null;
@@ -56,6 +57,7 @@ class AuthService {
             const token = await user.getIdToken(true);
             this.currentUser = user;
             this.idToken = token;
+            localStorage.setItem('token', token); // ✅ Save token for SubscriptionForm
             resolve({ success: true, user, token, backendData: data });
           } else {
             reject(new Error('User not signed in'));
@@ -73,6 +75,7 @@ class AuthService {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       const idToken = await user.getIdToken();
+      localStorage.setItem('token', idToken); // ✅ Save token for SubscriptionForm
 
       const response = await fetch(`${this.baseURL}/auth/firebase-login`, {
         method: 'POST',
@@ -162,6 +165,7 @@ class AuthService {
       await signOut(auth);
       this.currentUser = null;
       this.idToken = null;
+      localStorage.removeItem('token'); // ✅ Clean up token on logout
     } catch (error) {
       console.error('Logout error:', error);
       throw error;

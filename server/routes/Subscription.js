@@ -11,7 +11,9 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// Create Razorpay order for subscription payment
+// ---------------------------
+// POST /create-order
+// ---------------------------
 router.post('/create-order', async (req, res) => {
   const { amount, currency = 'INR', receipt, userId, plan } = req.body;
 
@@ -55,7 +57,9 @@ router.post('/create-order', async (req, res) => {
   }
 });
 
-// Verify Razorpay payment and activate subscription
+// ---------------------------
+// POST /verify-payment
+// ---------------------------
 router.post('/verify-payment', async (req, res) => {
   const {
     razorpay_payment_id,
@@ -92,6 +96,83 @@ router.post('/verify-payment', async (req, res) => {
   } catch (error) {
     console.error('Verify payment error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// ---------------------------
+// POST /save – Store subscription after payment
+// ---------------------------
+router.post('/save', async (req, res) => {
+  const { userId, plan, amount, razorpay_payment_id, razorpay_order_id, subscribedAt } = req.body;
+
+  if (!userId || !plan || !razorpay_payment_id || !razorpay_order_id) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    const user = await User.findOne({ firebaseUid: userId });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const existing = await Subscription.findOne({ user: user._id });
+
+    if (existing) {
+      existing.plan = plan;
+      existing.amount = amount;
+      existing.razorpay_payment_id = razorpay_payment_id;
+      existing.razorpay_order_id = razorpay_order_id;
+      existing.subscribedAt = new Date(subscribedAt);
+      existing.isActive = true;
+      await existing.save();
+      return res.json({ success: true, updated: true });
+    }
+
+    await Subscription.create({
+      user: user._id,
+      plan,
+      amount,
+      razorpay_payment_id,
+      razorpay_order_id,
+      subscribedAt: new Date(subscribedAt),
+      isActive: true,
+    });
+
+    res.json({ success: true, saved: true });
+  } catch (err) {
+    console.error('Subscription save error:', err);
+    res.status(500).json({ error: 'Failed to save subscription' });
+  }
+});
+
+// ---------------------------
+// GET /status?userId=xyz
+// ---------------------------
+router.get('/status', async (req, res) => {
+  const { userId } = req.query;
+
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+
+  try {
+    const user = await User.findOne({ firebaseUid: userId });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const subscription = await Subscription.findOne({ user: user._id, isActive: true });
+
+    if (subscription) {
+      res.json({
+        subscribed: true,
+        subscription: {
+          plan: subscription.plan,
+          amount: subscription.amount,
+          razorpay_payment_id: subscription.razorpay_payment_id,
+          razorpay_order_id: subscription.razorpay_order_id,
+        },
+      });
+    } else {
+      res.json({ subscribed: false });
+    }
+  } catch (err) {
+    console.error('Status check error:', err);
+    res.status(500).json({ error: 'Failed to check status' });
   }
 });
 

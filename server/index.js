@@ -56,21 +56,25 @@ if (process.env.ALLOWED_ORIGINS) {
 }
 
 app.use(cors({
-  origin: function (origin, callback) {
-    console.log('🌐 Incoming origin:', origin);
-    console.log('✅ Allowed origins:', allowedOrigins);
+  origin: function (origin, callback) {
+    console.log('🌐 Incoming origin:', origin);
+    console.log('✅ Allowed origins:', allowedOrigins);
 
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.error('⛔ Blocked by CORS:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
+    if (!origin) return callback(null, true); // Allow requests like Postman
+
+    const cleanOrigin = origin.replace(/\/+$/, ''); // Remove trailing slashes
+    const isAllowed = allowedOrigins.includes(cleanOrigin);
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.error('⛔ Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
 }));
+
 
 // Middlewares
 app.use(logger);
