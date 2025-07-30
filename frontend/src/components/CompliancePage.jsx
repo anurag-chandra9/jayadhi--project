@@ -1,124 +1,205 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import './CompliancePage.css'; // We will create this CSS file next
+import './CompliancePage.css';
+
+// --- NEW: List of available security controls ---
+const SECURITY_CONTROLS = [
+    'access control', 'audit logging', 'incident response', 'encryption', 
+    'network security', 'vulnerability management', 'data protection'
+];
+
+// --- UPDATED: Modal component with the new form layout ---
+const CreateFrameworkModal = ({ onClose, onFrameworkCreated }) => {
+    const { user } = useAuth();
+    const [name, setName] = useState('');
+    const [code, setCode] = useState('');
+    const [description, setDescription] = useState('');
+    const [tags, setTags] = useState('');
+    const [requirements, setRequirements] = useState([{ section: '', title: '', description: '', securityControls: [] }]);
+    const [error, setError] = useState('');
+
+    const handleRequirementChange = (index, event) => {
+        const values = [...requirements];
+        values[index][event.target.name] = event.target.value;
+        setRequirements(values);
+    };
+
+    const handleSecurityControlChange = (reqIndex, control) => {
+        const values = [...requirements];
+        const controls = values[reqIndex].securityControls;
+        const currentIndex = controls.indexOf(control);
+        if (currentIndex === -1) {
+            controls.push(control);
+        } else {
+            controls.splice(currentIndex, 1);
+        }
+        values[reqIndex].securityControls = controls;
+        setRequirements(values);
+    };
+
+    const addRequirementField = () => {
+        setRequirements([...requirements, { section: '', title: '', description: '', securityControls: [] }]);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        try {
+            const tagsArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+            const response = await fetch('/api/frameworks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`,
+                },
+                body: JSON.stringify({ name, code, description, tags: tagsArray, requirements }),
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.message || 'Failed to create framework.');
+            }
+            
+            onFrameworkCreated();
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    return (
+        <div className="modal-overlay">
+            <div className="modal-content">
+                <h2><span role="img" aria-label="tools">🛠️</span> Create Custom Framework</h2>
+                <form onSubmit={handleSubmit}>
+                    <label>Framework Name:</label>
+                    <input type="text" value={name} onChange={e => setName(e.target.value)} required />
+                    
+                    <label>Framework Code:</label>
+                    <input type="text" value={code} onChange={e => setCode(e.target.value)} required />
+                    
+                    <label>Description:</label>
+                    <textarea value={description} onChange={e => setDescription(e.target.value)} required />
+                    
+                    <label>Tags (comma-separated):</label>
+                    <input type="text" value={tags} onChange={e => setTags(e.target.value)} placeholder="cybersecurity, compliance, audit" />
+                    
+                    <h4>Requirements</h4>
+                    <div className="requirements-section">
+                        {requirements.map((req, index) => (
+                            <div key={index} className="requirement-input-group">
+                                <p>Requirement #{index + 1}</p>
+                                <input name="section" placeholder="Section (e.g., Section 1, Article A)" value={req.section} onChange={e => handleRequirementChange(index, e)} />
+                                <input name="title" placeholder="Title" value={req.title} onChange={e => handleRequirementChange(index, e)} />
+                                <textarea name="description" placeholder="Description" value={req.description} onChange={e => handleRequirementChange(index, e)} />
+                                
+                                <label>Security Controls:</label>
+                                <div className="security-controls-list">
+                                    {SECURITY_CONTROLS.map(control => (
+                                        <label key={control}>
+                                            <input type="checkbox" checked={req.securityControls.includes(control)} onChange={() => handleSecurityControlChange(index, control)} />
+                                            {control}
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <button type="button" className="add-btn" onClick={addRequirementField}>+ Add New Requirement</button>
+                    
+                    {error && <p className="error-message">{error}</p>}
+                    
+                    <div className="modal-actions">
+                        <button type="button" className="cancel-btn" onClick={onClose}>Cancel</button>
+                        <button type="submit" className="create-framework-btn">Create Framework</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
 
 const CompliancePage = () => {
   const { user } = useAuth();
-  const [complianceItems, setComplianceItems] = useState([]);
+  const [activeTab, setActiveTab] = useState('frameworks');
+  const [frameworks, setFrameworks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchComplianceData = async () => {
-      // Don't fetch if the user isn't logged in or token is not available
-      if (!user || !user.token) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const response = await fetch('/api/compliance', {
-          headers: {
-            'Authorization': `Bearer ${user.token}`,
-          },
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to fetch compliance data.');
-        }
-
-        const data = await response.json();
-        setComplianceItems(data);
-        setError('');
-      } catch (err) {
-        setError(err.message);
-        console.error("Fetch compliance error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchComplianceData();
-  }, [user]);
-
-  const handleStatusChange = async (itemId, newStatus) => {
+  const fetchFrameworks = async () => {
+    if (!user) return;
+    setLoading(true);
     try {
-      const response = await fetch('/api/compliance/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`,
-        },
-        body: JSON.stringify({ itemId, status: newStatus }),
+      const response = await fetch('/api/frameworks', {
+        headers: { 'Authorization': `Bearer ${user.token}` },
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to update status.');
-      }
-
-      // Update the state locally to reflect the change immediately
-      setComplianceItems(prevItems =>
-        prevItems.map(item =>
-          item._id === itemId ? { ...item, status: newStatus } : item
-        )
-      );
-    } catch (err) {
-      alert(`Error updating status: ${err.message}`);
+      const data = await response.json();
+      setFrameworks(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to fetch frameworks:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) return <div className="loading">Loading Compliance Data...</div>;
-  if (error) return <div className="error-message">Error: {error}</div>;
+  useEffect(() => {
+    fetchFrameworks();
+  }, [user]);
+
+  const handleFrameworkCreated = () => {
+    setIsModalOpen(false);
+    fetchFrameworks(); // Refetch the list to include the new one
+  };
+  
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'frameworks':
+        return (
+          <div className="frameworks-list">
+            <div className="frameworks-header">
+              <h3>Compliance Frameworks</h3>
+              <button className="create-framework-btn" onClick={() => setIsModalOpen(true)}>+ Create Custom Framework</button>
+            </div>
+            {frameworks.map(fw => (
+              <div key={fw._id} className="framework-card">
+                <div className="card-header">
+                  <h4>🏛️ {fw.name}</h4>
+                  {fw.isDefault && <span className="default-tag">Default</span>}
+                </div>
+                <p className="card-code">Code: {fw.code}</p>
+                <p className="card-description">{fw.description}</p>
+                <div className="card-footer">
+                  <span>Requirements: {fw.requirements.length}</span>
+                  <button className="details-btn">👁️</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      case 'assessments':
+        return <div>Assessments content goes here.</div>;
+      case 'results':
+        return <div>Results content goes here.</div>;
+      default:
+        return null;
+    }
+  };
+
+  if (loading) return <div className="loading">Loading...</div>;
 
   return (
-    <div className="compliance-container">
-      <h2>Compliance Tracker</h2>
-      <p>Track your adherence to key cybersecurity frameworks and regulations.</p>
+    <div className="compliance-module">
+      {isModalOpen && <CreateFrameworkModal onClose={() => setIsModalOpen(false)} onFrameworkCreated={handleFrameworkCreated} />}
       
-      <table className="compliance-table">
-        <thead>
-          <tr>
-            <th>Framework</th>
-            <th>Related Asset</th>
-            <th>Status</th>
-            <th>Last Checked</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {complianceItems.length > 0 ? (
-            complianceItems.map((item) => (
-              <tr key={item._id}>
-                <td>{item.framework}</td>
-                <td>{item.asset ? item.asset.name : 'N/A'}</td>
-                <td>
-                  <span className={`status-badge status-${item.status}`}>
-                    {item.status}
-                  </span>
-                </td>
-                <td>{new Date(item.lastChecked).toLocaleDateString()}</td>
-                <td>
-                  <select 
-                    value={item.status} 
-                    onChange={(e) => handleStatusChange(item._id, e.target.value)}
-                    className="status-select"
-                  >
-                    <option value="in-progress">In Progress</option>
-                    <option value="compliant">Compliant</option>
-                    <option value="non-compliant">Non-Compliant</option>
-                  </select>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="5" style={{ textAlign: 'center' }}>No compliance items found.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      <h2>Compliance Tracking Module</h2>
+      <div className="tabs">
+        <button onClick={() => setActiveTab('frameworks')} className={activeTab === 'frameworks' ? 'active' : ''}>Frameworks</button>
+        <button onClick={() => setActiveTab('assessments')} className={activeTab === 'assessments' ? 'active' : ''}>Assessments</button>
+        <button onClick={() => setActiveTab('results')} className={activeTab === 'results' ? 'active' : ''}>Results</button>
+      </div>
+      <div className="tab-content">
+        {renderContent()}
+      </div>
     </div>
   );
 };

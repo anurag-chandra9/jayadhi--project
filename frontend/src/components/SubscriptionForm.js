@@ -23,7 +23,7 @@ const PLANS = [
 ];
 
 const SubscriptionForm = () => {
-  const { user, isLoggedIn } = useAuth();
+  const { user } = useAuth(); // 1. Get the user object from our corrected AuthContext
   const [loadingPlan, setLoadingPlan] = useState('');
   const [paymentError, setPaymentError] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState(false);
@@ -31,6 +31,7 @@ const SubscriptionForm = () => {
   const [animate, setAnimate] = useState(false);
 
   useEffect(() => {
+    // Load the Razorpay script
     if (!window.Razorpay) {
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -44,23 +45,14 @@ const SubscriptionForm = () => {
     setLoadingPlan(plan.name);
     setPaymentError('');
     setPaymentSuccess(false);
-    setSuccessDetails(null);
 
-    // Debug authentication state
-    console.log('🔍 Auth State Check:', { 
-      isLoggedIn, 
-      user: !!user, 
-      userUid: user?.uid
-    });
-
-    // Validate user authentication - check Firebase auth state
-    if (!isLoggedIn || !user || !user.uid) {
+    // 2. Validate the user is logged into our application
+    if (!user || !user.token) {
       setPaymentError('Authentication required. Please log in first.');
       setLoadingPlan('');
       return;
     }
 
-    // Validate Razorpay key
     const razorpayKey = process.env.REACT_APP_RAZORPAY_KEY_ID;
     if (!razorpayKey) {
       setPaymentError('Payment configuration error. Please contact support.');
@@ -71,31 +63,18 @@ const SubscriptionForm = () => {
     try {
       const apiUrl = process.env.NODE_ENV === 'production' 
         ? (process.env.REACT_APP_API_URL || 'https://jayadhi-project-hyrv.onrender.com')
-        : (process.env.REACT_APP_API_URL || 'http://localhost:3000');
+        : 'http://localhost:3000';
       
-      // Get Firebase ID token instead of localStorage token
-      const token = await user.getIdToken();
-      console.log('🔑 Firebase token obtained:', !!token);
-      
-      if (!token) {
-        setPaymentError('Authentication required. Please log in first.');
-        setLoadingPlan('');
-        return;
-      }
-
+      // 3. Create the order using our application's JWT for authentication
       const res = await fetch(`${apiUrl}/api/subscription/create-order`, {
         method: 'POST',
-        mode: 'cors',
-        credentials: 'include',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'Origin': window.location.origin
+          'Authorization': `Bearer ${user.token}`, // <-- THE FIX: Use the app's token
         },
         body: JSON.stringify({
           amount: plan.amount,
           plan: plan.name,
-          userId: user.uid,
           receipt: `receipt_${plan.name}_${Date.now()}`,
         }),
       });
@@ -103,28 +82,19 @@ const SubscriptionForm = () => {
       const data = await res.json();
 
       if (data.orderId && window.Razorpay) {
-        const razorpayKey = process.env.REACT_APP_RAZORPAY_KEY_ID;
-
         const options = {
           key: razorpayKey,
           amount: data.amount,
           currency: data.currency,
           name: 'CyberSentinel Subscription',
-          description: plan.description,
+          description: `Payment for ${plan.name} Plan`,
           order_id: data.orderId,
           handler: async function (response) {
             try {
-              // Get fresh Firebase token for verification
-              const verifyToken = await user.getIdToken();
+              // The /verify-payment route is a public webhook, but we can still call it
               const verifyRes = await fetch(`${apiUrl}/api/subscription/verify-payment`, {
                 method: 'POST',
-                mode: 'cors',
-                credentials: 'include',
-                headers: { 
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${verifyToken}`,
-                  'Origin': window.location.origin
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_order_id: response.razorpay_order_id,
@@ -137,10 +107,9 @@ const SubscriptionForm = () => {
               if (verifyRes.ok && verifyData.success) {
                 setPaymentSuccess(true);
                 setSuccessDetails({
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_order_id: response.razorpay_order_id,
                   plan: plan.name,
                   amount: plan.amount,
+                  razorpay_payment_id: response.razorpay_payment_id,
                 });
               } else {
                 setPaymentError(verifyData.error || 'Payment verification failed');
@@ -148,6 +117,9 @@ const SubscriptionForm = () => {
             } catch (err) {
               setPaymentError('Payment verification failed');
             }
+          },
+          prefill: {
+            email: user.email, // Prefill user's email
           },
           theme: { color: '#6366f1' },
         };
@@ -191,16 +163,12 @@ const SubscriptionForm = () => {
             marginBottom: '24px',
             padding: 16,
             borderRadius: 8,
-            transform: animate ? 'translateY(0)' : 'translateY(-20px)',
-            opacity: animate ? 1 : 0,
-            transition: 'all 0.5s ease',
           }}
         >
           <h3>✅ Payment Successful!</h3>
           <p><b>Plan:</b> {successDetails.plan}</p>
           <p><b>Amount:</b> ₹{successDetails.amount}</p>
           <p><b>Payment ID:</b> {successDetails.razorpay_payment_id}</p>
-          <p><b>Order ID:</b> {successDetails.razorpay_order_id}</p>
         </div>
       )}
 
@@ -213,9 +181,6 @@ const SubscriptionForm = () => {
             marginBottom: '24px',
             padding: 16,
             borderRadius: 8,
-            transform: animate ? 'translateY(0)' : 'translateY(-20px)',
-            opacity: animate ? 1 : 0,
-            transition: 'all 0.5s ease',
           }}
         >
           {paymentError}
@@ -235,23 +200,13 @@ const SubscriptionForm = () => {
               textAlign: 'center',
               position: 'relative',
               boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)',
-              transform: animate ? 'scale(1)' : 'scale(0.9)',
-              opacity: animate ? 1 : 0,
               transition: `all 0.5s ease ${index * 0.2}s`,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.05)';
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 255, 255, 0.2)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)';
             }}
           >
             {index === 1 && (
               <div style={{
                 position: 'absolute',
-                top: animate ? '-14px' : '-40px',
+                top: '-14px',
                 left: '50%',
                 transform: 'translateX(-50%)',
                 backgroundColor: '#f59e0b',
@@ -260,7 +215,6 @@ const SubscriptionForm = () => {
                 padding: '4px 10px',
                 borderRadius: '999px',
                 fontWeight: '600',
-                transition: 'top 0.6s ease',
               }}>
                 Most Popular
               </div>
@@ -288,16 +242,6 @@ const SubscriptionForm = () => {
                 cursor: 'pointer',
                 fontWeight: '600',
                 width: '100%',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 0 0 transparent',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#2563eb';
-                e.currentTarget.style.boxShadow = '0 0 10px #3B82F6';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#3B82F6';
-                e.currentTarget.style.boxShadow = '0 0 0 transparent';
               }}
             >
               {loadingPlan === plan.name ? 'Processing...' : `Choose ${plan.name}`}
@@ -305,10 +249,6 @@ const SubscriptionForm = () => {
           </div>
         ))}
       </div>
-
-      <p style={{ textAlign: 'center', fontSize: '14px', color: '#e5e7eb', marginTop: '40px' }}>
-        ✅ 24/7 Security Monitoring &nbsp;&nbsp;&nbsp; ✅ Real-time Threat Detection &nbsp;&nbsp;&nbsp; ✅ Automated Response
-      </p>
     </div>
   );
 };

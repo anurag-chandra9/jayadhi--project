@@ -1,5 +1,5 @@
 // frontend/src/components/Login.js
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../firebase/firebase';
@@ -12,82 +12,37 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [message, setMessage] = useState('');
 
+    const { login } = useAuth(); 
+    const navigate = useNavigate(); 
+
     const handleLogin = async (e) => {
         e.preventDefault();
-        setMessage(''); // Clear previous messages
+        setMessage('Logging in...');
 
         try {
-            // *** CRITICAL CHANGE HERE: Use authService.loginWithFirebase ***
-            const loginResult = await authService.loginWithFirebase(email, password);
+            // --- THIS IS THE FIX ---
+            // The function name has been corrected to match your authService.
+            const result = await authService.loginWithFirebase(email, password);
+            const appToken = result.backendData.token;
 
-            // The loginWithFirebase method already handles the client-side Firebase auth
-            // and sending the ID token to your backend's /firebase-login route.
-            // It should return the user and potentially the token after backend validation.
-            // Ensure authService.loginWithFirebase returns the idToken for localStorage if needed.
-            if (loginResult && loginResult.idToken) {
-                localStorage.setItem('token', loginResult.idToken);
-            } else if (loginResult && loginResult.user) {
-                // If loginWithFirebase returns user but not idToken directly,
-                // you might need to fetch it separately, though it should be set by then.
-                const currentToken = await authService.getIdToken();
-                if (currentToken) {
-                    localStorage.setItem('token', currentToken);
-                }
+            if (result.success && appToken) {
+                login(appToken);
+
+                setMessage('Login successful ✅ Redirecting...');
+                setTimeout(() => {
+                    navigate('/risk-dashboard');
+                }, 1000);
+            } else {
+                throw new Error("Application token not found from backend.");
             }
-
-
-            setMessage('Login successful ✅ Redirecting...');
-            setTimeout(() => {
-                window.location.href = '/risk-dashboard'; // Redirect after successful login
-            }, 1000);
-
         } catch (err) {
-            console.error('Login failed:', err); // Log the full error object for better debugging
-
-            // Refined error handling based on Firebase client SDK error codes
-            let errorMessage = 'Something went wrong ❌. Please try again.';
-
-            if (err.code) { // Firebase client-side errors typically have a 'code' property
-                switch (err.code) {
-                    case 'auth/wrong-password':
-                    case 'auth/user-not-found':
-                    case 'auth/invalid-credential': // Generic error for wrong email/password if enumeration protection is on
-                        errorMessage = '❌ Invalid email or password.';
-                        break;
-                    case 'auth/too-many-requests':
-                        errorMessage = '🚫 Too many failed login attempts. Your account may be temporarily locked. Please try again later.';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMessage = '❌ The email address is not valid.';
-                        break;
-                    case 'auth/user-disabled':
-                        errorMessage = '🚫 Your account has been disabled. Please contact support.';
-                        break;
-                    case 'auth/network-request-failed':
-                        errorMessage = '⚠️ Network error. Please check your internet connection.';
-                        break;
-                    case 'auth/email-not-verified': // If you require email verification
-                        errorMessage = '⚠️ Please verify your email address to log in.';
-                        break;
-                    default:
-                        errorMessage = `Firebase error: ${err.message}`;
-                }
-            } else if (err.message) { // Fallback for general errors or backend messages
-                if (err.message.includes('Backend validation failed')) {
-                    errorMessage = '❌ Login failed due to backend validation error.';
-                } else if (err.message.includes('Failed to retrieve token')) {
-                    errorMessage = 'Login failed: Authentication token could not be retrieved.';
-                }
-                else {
-                    errorMessage = `Error: ${err.message}`;
-                }
-            }
-            setMessage(errorMessage);
+            console.error('Login failed:', err.message);
+            setMessage(`Login failed: ${err.message}`);
         }
     };
 
     return (
-        <form onSubmit={handleLogin} className="login-container"> {/* Assuming you have a login-container class */}
+        <form onSubmit={handleLogin} className="login-container">
             <h2>Login</h2>
 
             <input
@@ -115,7 +70,7 @@ const Login = () => {
             </div>
 
             <button type="submit">Login</button>
-            {message && <p className="message">{message}</p>} {/* Assuming you have a message class for styling */}
+            {message && <p className="message">{message}</p>}
         </form>
     );
 };

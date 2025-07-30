@@ -1,79 +1,282 @@
-.compliance-container {
-  max-width: 1000px;
+.compliance-module {
+  max-width: 1200px;
   margin: 2rem auto;
   padding: 2rem;
-  background-color: #f9f9f9;
+  background-color: #0a0f24; /* Dark blue background */
+  color: #cfe6ff;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.compliance-container h2 {
-  text-align: center;
-  margin-bottom: 0.5rem;
-  color: #333;
+.compliance-module h2 {
+  font-size: 24px;
+  border-bottom: 2px solid #00ffe7;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
 }
 
-.compliance-container p {
-  text-align: center;
-  margin-bottom: 2rem;
-  color: #666;
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
-.compliance-table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: #fff;
+.tabs button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: transparent;
+  border: 1px solid #141c3a;
+  color: #cfe6ff;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.compliance-table th,
-.compliance-table td {
-  padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
+.tabs button.active {
+  background-color: #00ffe7;
+  color: #0a0f24;
+  border-color: #00ffe7;
+  font-weight: bold;
 }
 
-.compliance-table th {
-  background-color: #f2f2f2;
-  font-weight: 600;
-  color: #333;
+.tabs button:hover {
+  background-color: #141c3a;
 }
 
-.status-badge {
-  padding: 5px 10px;
+.tab-content {
+  margin-top: 20px;
+}
+
+.frameworks-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.create-framework-btn {
+  background: linear-gradient(135deg, #00ffe7, #4dc2f9);
+  color: #0a0f24;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.create-framework-btn:hover {
+  box-shadow: 0 0 15px rgba(0, 255, 231, 0.5);
+}
+
+.framework-card {
+  background-color: #141c3a;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-left: 4px solid #00ffe7;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.card-header h4 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.default-tag {
+  background-color: #28a745;
+  color: white;
+  padding: 3px 8px;
   border-radius: 12px;
-  font-size: 0.85em;
-  font-weight: 500;
-  text-transform: capitalize;
-  color: #fff;
+  font-size: 12px;
 }
 
-.status-compliant {
-  background-color: #28a745; /* Green */
+.card-code, .card-description {
+  color: #a9c2e3;
+  margin: 5px 0;
 }
 
-.status-non-compliant {
-  background-color: #dc3545; /* Red */
+.card-footer {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #2a3659;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #00ffe7;
+  font-weight: bold;
 }
 
-.status-in-progress {
-  background-color: #ffc107; /* Yellow */
-  color: #333;
-}
-
-.status-select {
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: #fff;
+.details-btn {
+  background: #2a3659;
+  border: 1px solid #4a5c8b;
+  color: #cfe6ff;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
   cursor: pointer;
 }
 
-.loading, .error-message {
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.2rem;
+/* --- NEW STYLES ADDED HERE TO FIX THE FORM --- */
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1001;
 }
 
-.error-message {
-  color: #dc3545;
+.modal-content {
+  background-color: #141c3a;
+  padding: 30px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  color: #cfe6ff;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #2a3659;
+  padding-bottom: 15px;
+  color: #00ffe7;
+}
+
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.modal-content label {
+  font-weight: bold;
+  margin-top: 10px;
+  display: block;
+  color: #a9c2e3;
+}
+
+.modal-content input[type="text"],
+.modal-content textarea {
+  width: 100%;
+  padding: 12px;
+  background-color: #0a0f24;
+  border: 1px solid #2a3659;
+  color: #cfe6ff;
+  border-radius: 4px;
+  box-sizing: border-box; /* Ensures padding doesn't affect width */
+}
+
+.modal-content h4 {
+  color: #00ffe7;
+  border-top: 1px solid #2a3659;
+  padding-top: 15px;
+  margin-top: 15px;
+}
+
+.requirements-section {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 10px;
+  background-color: #0a0f24;
+  border-radius: 4px;
+}
+
+.requirement-input-group {
+  padding: 15px;
+  border: 1px solid #2a3659;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.requirement-input-group p {
+  font-weight: bold;
+  color: #e65c79; /* Reddish color for "Requirement #1" */
+  margin-top: 0;
+}
+
+.security-controls-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.security-controls-list label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+/* Custom Checkbox Styling */
+.security-controls-list input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #4a5c8b;
+  border-radius: 3px;
+  background-color: #0a0f24;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.security-controls-list input[type="checkbox"]:checked {
+  background-color: #00ffe7;
+  border-color: #00ffe7;
+}
+
+.security-controls-list input[type="checkbox"]:checked::after {
+  content: '✔';
+  font-size: 14px;
+  color: #0a0f24;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.add-btn {
+  background-color: #28a745;
+  color: white;
+  font-weight: bold;
+  align-self: flex-start;
+  border: none;
+  padding: 8px 15px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cancel-btn {
+  background: #2a3659;
+  border: 1px solid #4a5c8b;
+  color: #cfe6ff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
 }
