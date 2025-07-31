@@ -87,37 +87,51 @@ const Login = () => {
     };
 
     return (
-        <form onSubmit={handleLogin} className="login-container"> {/* Assuming you have a login-container class */}
-            <h2>Login</h2>
+    <div className="login-wrapper">
+      {/* Animated SVG Lines */}
+      <svg className="circuit-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <polyline points="0,20 20,20 20,40 40,40" />
+        <polyline points="60,0 60,20 80,20 80,40" />
+        <polyline points="10,60 30,60 30,80 50,80" />
+        <polyline points="70,70 70,90 90,90" />
+      </svg>
 
-            <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                required
-            />
+      {/* Animated Dots Layer */}
+      <div className="animated-dots"></div>
 
-            <div className="password-wrapper">
-                <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
-                    required
-                />
-                <span
-                    className="toggle-password"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </span>
-            </div>
+      {/* Login Form */}
+      <form onSubmit={handleLogin} className="login-container">
+        <h2>Login</h2>
 
-            <button type="submit">Login</button>
-            {message && <p className="message">{message}</p>} {/* Assuming you have a message class for styling */}
-        </form>
-    );
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          required
+        />
+
+        <div className="password-wrapper">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            required
+          />
+          <span
+            className="toggle-password"
+            onClick={() => setShowPassword((prev) => !prev)}
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </span>
+        </div>
+
+        <button type="submit">Login</button>
+        {message && <p className="message">{message}</p>}
+      </form>
+    </div>
+  );
 };
 
 export default Login;

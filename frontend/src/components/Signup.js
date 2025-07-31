@@ -50,46 +50,54 @@ const Signup = () => {
 };
 
   return (
-    <div className="signup-container">
-      <form onSubmit={handleSignup}>
-        <h2>Sign Up</h2>
+    <div className="signup-wrapper">
+      {/* Animated SVG Lines */}
+        <svg className="circuit-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <polyline points="0,20 20,20 20,40 40,40" />
+        <polyline points="60,0 60,20 80,20 80,40" />
+        <polyline points="10,60 30,60 30,80 50,80" />
+        <polyline points="70,70 70,90 90,90" />
+      </svg>
 
-        <input
-          type="text"
-          placeholder="First Name"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          required
-        />
+      {/* Animated Dots */}
+    <div className="animated-dots"></div>
 
-        <input
-          type="text"
-          placeholder="Last Name"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          required
-        />
+      {/* Signup Form */}
+    <form onSubmit={handleSignup} className="signup-container">
+    <h2>Sign Up</h2>
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+    <input
+      type="text"
+      placeholder="First Name"
+      value={firstName}
+      onChange={(e) => setFirstName(e.target.value)}
+      required
+    />
+    <input
+      type="text"
+      placeholder="Last Name"
+      value={lastName}
+      onChange={(e) => setLastName(e.target.value)}
+      required
+    />
+    <input
+      type="email"
+      placeholder="Email"
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+      required
+    />
+    <input
+      type="password"
+      placeholder="Password"
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      required
+    />
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-
-        <button type="submit">Register</button>
-
-        {message && <p className="message">{message}</p>}
-      </form>
+    <button type="submit">Register</button>
+    {message && <p className="message">{message}</p>}
+    </form>
     </div>
   );
 };
