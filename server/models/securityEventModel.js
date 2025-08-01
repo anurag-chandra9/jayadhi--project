@@ -18,7 +18,10 @@ const SecurityEventSchema = new mongoose.Schema({
       'ip_unblocked',
       'suspicious_url',
       'malicious_pattern_detected',
-      'suspicious_url_access'
+      'suspicious_url_access',
+      // Added the event types from our wafController
+      'ip_blocked_manual',
+      'ip_unblocked_manual'
     ]
   },
   severity: { 
@@ -35,19 +38,21 @@ const SecurityEventSchema = new mongoose.Schema({
     type: Date, 
     default: Date.now 
   },
-  userId: { 
+  // --- THIS IS THE FIX ---
+  // The field name has been changed from 'userId' to 'user'
+  user: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User' 
   },
+  // --------------------
   blocked: { 
     type: Boolean, 
     default: false 
   },
-  // Additional fields for enhanced tracking
-  origin: String, // Client origin
-  blockingKey: String, // The key used for blocking
-  rateLimitKey: String, // The key used for rate limiting
-  trackingKey: String // The key used for tracking
+  origin: String,
+  blockingKey: String,
+  rateLimitKey: String,
+  trackingKey: String
 });
 
 // TTL index to automatically remove old events after 30 days
@@ -56,6 +61,6 @@ SecurityEventSchema.index({ timestamp: 1 }, { expireAfterSeconds: 30 * 24 * 60 *
 // Additional indexes for better performance
 SecurityEventSchema.index({ eventType: 1, timestamp: -1 });
 SecurityEventSchema.index({ severity: 1, timestamp: -1 });
-SecurityEventSchema.index({ blocked: 1, timestamp: -1 });
+SecurityEventSchema.index({ user: 1, timestamp: -1 }); // Index the new 'user' field
 
 module.exports = mongoose.model('SecurityEvent', SecurityEventSchema);

@@ -1,107 +1,243 @@
 const express = require('express');
+
 const router = express.Router();
+
 const bcrypt = require('bcryptjs');
+
 const admin = require('firebase-admin');
+
 const User = require('../models/userModel');
+
 const AuthTracker = require('../middleware/authTracker');
+
 const { WAFCore, WAFLogger } = require('../middleware/firewallMiddleware');
+
 const { setAdminSession } = require('../middleware/wafAlerts');
-const jwt = require('jsonwebtoken'); // 1. IMPORT JWT
+
+const jwt = require('jsonwebtoken');
+
+
 
 // Initialize Firebase Admin SDK
+
 if (!admin.apps.length) {
-  const serviceAccount = require('../config/serviceAccountKey.json');
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+
+  const serviceAccount = require('../config/serviceAccountKey.json');
+
+  admin.initializeApp({
+
+    credential: admin.credential.cert(serviceAccount),
+
+  });
+
 }
 
-// 2. HELPER FUNCTION TO GENERATE YOUR APP's TOKEN
+
+
+// Helper function to generate your app's JWT
+
 const generateToken = (id, role) => {
-  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
-    expiresIn: '30d',
-  });
+
+  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
+
+    expiresIn: '30d',
+
+  });
+
 };
 
 
-// ... (Your signup and other routes remain the same) ...
+
+// ... (Your signup, login, verify-token routes remain the same) ...
+
 router.post('/signup', async (req, res) => {
-    // ... existing signup code
+
+    // ... existing signup code
+
 });
+
+
 
 router.post('/login', async (req, res) => {
-    // ... existing custom token login code
+
+    // ... existing custom token login code
+
 });
 
+
+
 router.post('/verify-token', async (req, res) => {
-    // ... existing verify-token code
+
+    // ... existing verify-token code
+
 });
+
+
+
 
 
 // --- THIS IS THE FIX ---
-// Firebase ID Token Login
-router.post('/firebase-login', async (req, res) => {
-  try {
-    const { idToken } = req.body;
-    const ipAddress = AuthTracker.getClientIP(req);
 
-    if (!idToken) {
-      return res.status(400).json({ message: 'Firebase ID token is required' });
-    }
+// This new, public endpoint is called by the frontend ONLY when a Firebase login fails.
 
-    const isBlocked = await AuthTracker.isClientBlocked(req);
-    if (isBlocked) {
-      return res.status(403).json({
-        message: 'Access denied. Your access has been blocked due to suspicious activity.'
-      });
-    }
+// Its only job is to create a security event log.
 
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    const user = await User.findOne({ firebaseUid: decodedToken.uid });
+router.post('/report-failed-login', async (req, res) => {
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found in database' });
-    }
+    try {
 
-    await AuthTracker.recordSuccessfulLogin(req, user.email);
-    user.lastLogin = new Date();
-    await user.save();
+        const { email } = req.body;
 
-    WAFLogger.info('Firebase token login successful', {
-      email: user.email,
-      ipAddress,
-      firebaseUid: user.firebaseUid
-    });
+        // We use the AuthTracker to record the failed attempt, which creates a security event.
 
-    // 3. GENERATE AND SEND BACK YOUR APP's JWT
-    const appToken = generateToken(user._id, user.role);
+        await AuthTracker.recordFailedLogin(req, email);
 
-    res.json({
-      success: true,
-      message: 'Firebase login successful',
-      token: appToken, // <-- THE MISSING PIECE FOR THE FRONTEND
-      user: {
-        username: user.username,
-        email: user.email,
-        role: user.role, // Also good to send the role back directly
-      }
-    });
-  } catch (error) {
-    WAFLogger.error('Firebase login error', {
-      error: error.message,
-      ipAddress: AuthTracker.getClientIP(req)
-    });
+        res.status(200).json({ message: 'Failed login attempt reported successfully.' });
 
-    if (error.code && error.code.startsWith('auth/')) {
-      return res.status(401).json({ message: 'Invalid Firebase token' });
-    }
+    } catch (error) {
 
-    res.status(500).json({ message: 'Server error during Firebase login' });
-  }
+        // This endpoint should not fail, but we add a catch just in case.
+
+        WAFLogger.error('Error reporting failed login', { error: error.message });
+
+        res.status(500).json({ message: 'Server error while reporting failed login.' });
+
+    }
+
 });
+
+// --------------------
+
+
+
+
+
+// Firebase ID Token Login
+
+router.post('/firebase-login', async (req, res) => {
+
+  try {
+
+    const { idToken } = req.body;
+
+    const ipAddress = AuthTracker.getClientIP(req);
+
+
+
+    if (!idToken) {
+
+      return res.status(400).json({ message: 'Firebase ID token is required' });
+
+    }
+
+
+
+    const isBlocked = await AuthTracker.isClientBlocked(req);
+
+    if (isBlocked) {
+
+      return res.status(403).json({
+
+        message: 'Access denied. Your access has been blocked due to suspicious activity.'
+
+      });
+
+    }
+
+
+
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+
+    const user = await User.findOne({ firebaseUid: decodedToken.uid });
+
+
+
+    if (!user) {
+
+      return res.status(404).json({ message: 'User not found in database' });
+
+    }
+
+
+
+    await AuthTracker.recordSuccessfulLogin(req, user.email);
+
+    user.lastLogin = new Date();
+
+    await user.save();
+
+
+
+    WAFLogger.info('Firebase token login successful', {
+
+      email: user.email,
+
+      ipAddress,
+
+      firebaseUid: user.firebaseUid
+
+    });
+
+
+
+    const appToken = generateToken(user._id, user.role);
+
+
+
+    res.json({
+
+      success: true,
+
+      message: 'Firebase login successful',
+
+      token: appToken,
+
+      user: {
+
+        username: user.username,
+
+        email: user.email,
+
+        role: user.role,
+
+      }
+
+    });
+
+  } catch (error) {
+
+    WAFLogger.error('Firebase login error', {
+
+      error: error.message,
+
+      ipAddress: AuthTracker.getClientIP(req)
+
+    });
+
+
+
+    if (error.code && error.code.startsWith('auth/')) {
+
+      return res.status(401).json({ message: 'Invalid Firebase token' });
+
+    }
+
+
+
+    res.status(500).json({ message: 'Server error during Firebase login' });
+
+  }
+
+});
+
+
 
 router.post('/logout', async (req, res) => {
-    // ... existing logout code
+
+    // ... existing logout code
+
 });
+
+
 
 module.exports = router;

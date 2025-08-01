@@ -20,8 +20,6 @@ const Login = () => {
         setMessage('Logging in...');
 
         try {
-            // --- THIS IS THE FIX ---
-            // The function name has been corrected to match your authService.
             const result = await authService.loginWithFirebase(email, password);
             const appToken = result.backendData.token;
 
@@ -38,6 +36,27 @@ const Login = () => {
         } catch (err) {
             console.error('Login failed:', err.message);
             setMessage(`Login failed: ${err.message}`);
+
+            // --- THIS IS THE FIX ---
+            // After a login fails, we now send a report to our backend.
+            // This will create a security event that appears in your analytics.
+            try {
+                const apiUrl = process.env.NODE_ENV === 'production' 
+                    ? (process.env.REACT_APP_API_URL || 'https://jayadhi-project-hyrv.onrender.com')
+                    : 'http://localhost:3000';
+
+                fetch(`${apiUrl}/auth/report-failed-login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email }),
+                });
+            } catch (reportError) {
+                // If this fails, we just log it to the console. It's not critical for the user.
+                console.error("Failed to report failed login attempt:", reportError);
+            }
+            // --------------------
         }
     };
 

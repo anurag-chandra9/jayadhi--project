@@ -9,43 +9,33 @@ const wafController = require('../controllers/wafController');
 const assetController = require('../controllers/assetController');
 const incidentReportController = require('../controllers/incidentReportController');
 const subscriptionRoutes = require('./Subscription');
-const frameworkController = require('../controllers/frameworkController'); // Import the new controller
+const frameworkController = require('../controllers/frameworkController');
+const analyticsController = require('../controllers/analyticsController'); // 1. Import the new controller
 
 router.use('/subscription', subscriptionRoutes);
 
 // Middleware
-const { protect } = require('../middleware/protect'); // Correct middleware for app's JWT
+const { protect } = require('../middleware/protect');
 const { authorize } = require('../middleware/rbacMiddleware');
 
 // ======== THREAT INGESTION ========
 router.post('/threats/report', protect, authorize('user', 'admin'), threatController.reportThreat);
 
-// ======== COMPLIANCE TRACKING (OLD & NEW ROUTES) ========
-// Note: The '/compliance' route is now for the old, simpler model.
+// ======== COMPLIANCE TRACKING ========
 router.get('/compliance', protect, authorize('user', 'admin'), complianceController.getComplianceItems);
 router.post('/compliance/update', protect, authorize('user', 'admin'), complianceController.updateComplianceItem);
-
-// --- FIX APPLIED HERE ---
-// NEW ROUTES FOR THE ADVANCED COMPLIANCE MODULE
 router.get('/frameworks', protect, frameworkController.getFrameworks);
+router.post('/frameworks', protect, frameworkController.createFramework);
 router.get('/compliance/status', protect, frameworkController.getUserComplianceStatus);
-// ------------------------
-
 
 // ======== RISK DASHBOARD ========
 router.get('/dashboard', protect, authorize('user', 'admin'), dashboardController.getDashboard);
 
 // ======== WAF MANAGEMENT ========
-// View WAF dashboard data - Accessible by both user & admin
 router.get('/waf/dashboard', protect, authorize('user', 'admin'), wafController.getWAFDashboard);
-
-// View WAF security events - Accessible by both user & admin
 router.get('/waf/security-events', protect, authorize('user', 'admin'), wafController.getSecurityEvents);
-
-// These actions remain Admin-only
 router.post('/waf/block-ip', protect, authorize('admin'), wafController.blockIP);
 router.post('/waf/unblock-ip', protect, authorize('admin'), wafController.unblockIP);
-
 
 // ======== ASSET MANAGEMENT ========
 router.get('/assets', protect, authorize('user', 'admin'), assetController.getAllAssets);
@@ -55,5 +45,12 @@ router.delete('/assets/:id', protect, authorize('user', 'admin'), assetControlle
 
 // ======== INCIDENT REPORTING ========
 router.post('/incidents/report', protect, authorize('user', 'admin'), incidentReportController.reportIncident);
+
+// --- 2. ADDED THE NEW ANALYTICS ROUTES HERE ---
+// ======== ANALYTICS & REPORTING ========
+router.get('/analytics/dashboard', protect, analyticsController.getDashboardAnalytics);
+router.get('/analytics/benchmarking', protect, analyticsController.getBenchmarkingData);
+router.get('/analytics/forensics', protect, analyticsController.getIncidentForensics);
+// ---------------------------------------------
 
 module.exports = router;
